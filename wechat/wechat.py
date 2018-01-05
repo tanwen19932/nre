@@ -1,6 +1,7 @@
 import itchat
 import time
-
+import wechat.weather as weather
+import json
 
 @itchat.msg_register('Text')
 def text_reply(msg):
@@ -18,5 +19,8 @@ if __name__ == '__main__':
     itchat.auto_login()
 
     # 获取自己的UserName
+    for name in itchat.get_friends:
+        print(name)
+    weather_json = json.load(weather.getWeather())
     myUserName = itchat.get_friends(update=True)[0]["UserName"]
     itchat.run()
