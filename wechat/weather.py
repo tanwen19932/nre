@@ -17,3 +17,6 @@ def getWeather():
        return content
     else:
         return None
+
+
+print(getWeather())

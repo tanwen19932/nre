@@ -1,2 +1,3 @@
+gensim
 itchat=1.3.10
 urllib
