@@ -1,5 +1,5 @@
 import numpy as np
-import tensorflow as tf
+import tw_tensorflow as tf
 
 w = tf.variable(0)
 cost = tf.add(tf.add(w**2,tf.multiply(-10.,w)),25)

@@ -1,6 +1,6 @@
 import itchat
 import time
-import wechat.weather as weather
+import tw_wechat.weather as weather
 import json
 
 @itchat.msg_register('Text')
