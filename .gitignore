@@ -14,7 +14,6 @@ develop-eggs/
 dist/
 downloads/
 eggs/
-data/
 .eggs/
 lib/
 lib64/
@@ -104,4 +103,3 @@ ENV/
 __MACOSX/
 .DS_Store
 .idea/
-data/
