@@ -19,27 +19,16 @@ list_sentences_test = train['doc'].fillna("CVxTz").values
 
 need_word2vec = {}
 tokenizer = text.Tokenizer(num_words=100)
-tokenizer.fit_on_texts(list(list_sentences_train))
+tokenizer.fit_on_texts(list_sentences_train+list_sentences_test)
 word_vec = gensim.models.KeyedVectors.load_word2vec_format(os.path.join(os.path.dirname(__file__), '../data/word2vec/GoogleNews-vectors-negative300.bin'), binary=True)
 
-i = 0
 for word in tokenizer.word_index:
     if(word_vec.__contains__(word)):
-        need_word2vec[i]=word_vec[word]
-    else:need_word2vec[i]=np.zeros((1,300))
-    i+=1
+        need_word2vec[word]=word_vec[word]
+    else:need_word2vec[word]=np.zeros((1,300))
 del word_vec
 import pickle
-f = open('needed_word2vec.bin', 'wb')
+f = open('../data/needed_word2vec.bin', 'wb')
 f.write(pickle.dumps(need_word2vec))
 f.close()
-
-
-list_tokenized_train = tokenizer.texts_to_sequences(list_sentences_train)
-list_tokenized_test = tokenizer.texts_to_sequences(list_sentences_test)
-
-x_train = sequence.pad_sequences(list_tokenized_train, maxlen=100)
-x_test = sequence.pad_sequences(list_tokenized_test, maxlen=100)
-
-
 
