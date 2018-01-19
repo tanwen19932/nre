@@ -19,21 +19,14 @@ MAX_NB_WORDS = 20000 # 将字典设置为含有1万个词
 EMBEDDING_DIM = 300 # 词向量维度，300维
 VALIDATION_SPLIT = 0.2 # 测试集大小，全部数据的20%
 
-word_vec = gensim.models.KeyedVectors.load_word2vec_format(os.path.join(os.path.dirname(__file__), '../data/word2vec/GoogleNews-vectors-negative300.bin'), binary=True)
-print(word_vec.most_similar('dog'))
 # print out:
 # Indexing word vectors.
 # Found 10000 word vectors.
 # 目的是得到一份字典(embeddings_index)含有1万个词，每个词对应属于自己的300维向量
-embeddings_index = {}
-for word, vocab_obj in word_vec.vocab.items():
-    if int(vocab_obj.index) < MAX_NB_WORDS:
-        embeddings_index[word] = word_vec[word]
-del word_vec # 删掉gensim模型释放内存
-print('Found %s word vectors.' % len(embeddings_index))
+
 import pickle
-f = open('needed_word2vec.bin', 'wb')
-f.write(pickle.dump(embeddings_index))
+f = open('../data/needed_word2vec.bin', 'rb')
+embeddings_index = pickle.load(f)
 f.close()
 
 
@@ -44,22 +37,36 @@ labels = []  # list of label ids
 labels_index = {}  # label与name的对应关系
 
 # 读取数据
-path = '../content.csv'
-contents = pd.read_csv(path)
-contents = contents.dropna()
+train = pd.read_csv(filepath_or_buffer="../data/train.txt",delimiter='|',
+                    # header=["type","e1","e2","doc"],
+                    names=["type","e1","e2","doc"]
+                    )
+test = pd.read_csv(filepath_or_buffer="../data/test.txt",delimiter='|')
+
 
 # 提取文本内容与label
-texts = contents['content'].values.tolist()
-labels = contents['channel_id'].map(int)
-labels = labels.values.tolist()
+texts = train['doc'].values.tolist()
+# label_names = train['type']
+# labels = to_categorical(np.asarray(label_names)) #转化label
+
+types = ["other","cause-effect","component-whole",
+         "entity-destination","product-producer","entity-origin",
+         "member-collection","message-topic",
+         "content-container","instrument-agency"]
+y = train['type'].map(lambda x:types.index(x.lower().replace("\n",'')))
+
+# Other :  1410 (17.63%)
+#         Cause-Effect :  1003 (12.54%)
+#      Component-Whole :   941 (11.76%)
+#   Entity-Destination :   845 (10.56%)
+#     Product-Producer :   717 ( 8.96%)
+#        Entity-Origin :   716 ( 8.95%)
+#    Member-Collection :   690 ( 8.63%)
+#        Message-Topic :   634 ( 7.92%)
+#    Content-Container :   540 ( 6.75%)
+#    Instrument-Agency :   504 ( 6.30%)
 
 # 获得label与name的对应关系
-tem_labels_index = contents.groupby(['name', 'channel_id']).size().reset_index()
-tem_labels_index = tem_labels_index[['channel_id', 'name']].values.tolist()
-for idx, name in tem_labels_index:
-    labels_index[name] = idx
-del contents, tem_labels_index
-
 print('Found %s texts.' % len(texts))
 
 # print out
@@ -75,8 +82,8 @@ print('Found %s unique tokens.' % len(word_index))
 
 data = pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH) # 限制每篇文章的长度
 
-labels = to_categorical(np.asarray(labels)) # label one hot表示
 print('Shape of data tensor:', data.shape)
+
 print('Shape of label tensor:', labels.shape)
 
 
@@ -85,7 +92,7 @@ print('Shape of label tensor:', labels.shape)
 indices = np.arange(data.shape[0])
 np.random.shuffle(indices)
 data = data[indices]
-labels = labels[indices]
+labels = y[indices]
 num_validation_samples = int(VALIDATION_SPLIT * data.shape[0])
 
 # 切割数据
