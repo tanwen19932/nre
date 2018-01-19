@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 
-print('Indexing word vecto')
+print('Indexing word vector')
 from keras.layers import Conv1D, MaxPooling1D, Embedding
 from keras.layers import Dense, Input, Flatten
 from keras.models import Model
@@ -31,7 +31,10 @@ for word, vocab_obj in word_vec.vocab.items():
         embeddings_index[word] = word_vec[word]
 del word_vec # 删掉gensim模型释放内存
 print('Found %s word vectors.' % len(embeddings_index))
-
+import pickle
+f = open('needed_word2vec.bin', 'wb')
+f.write(pickle.dump(embeddings_index))
+f.close()
 
 
 print('Processing text dataset')
