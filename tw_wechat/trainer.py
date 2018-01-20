@@ -5,7 +5,7 @@ from keras.layers import Conv1D, MaxPooling1D, Embedding
 from keras.layers import Dense, Input, Flatten
 from keras.models import Model, load_model
 
-from tw_word2vec.keras_input import embedding_layer, MAX_SEQUENCE_LENGTH, types, get_xy
+from tw_word2vec.keras_input import embedding_layer, MAX_SEQUENCE_LENGTH, types, get_xy, get_sentence_vec
 
 
 def train():
@@ -27,7 +27,7 @@ def train():
     # 如果希望短一些时间可以，epochs调小
 
     # ModelCheckpoint回调函数将在每个epoch后保存模型到filepath，当save_best_only=True保存验证集误差最小的参数
-    file_path="weights_base.best.hdf5"
+    file_path="../data/model/weights_base.best.hdf5"
     checkpoint = ModelCheckpoint(file_path, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
     # 当监测值不再改善时，该回调函数将中止训练
     early = EarlyStopping(monitor="val_loss", mode="min", patience=20)
@@ -45,7 +45,8 @@ def train():
 # model.save(filepath="model1.model")
 
 if __name__ == '__main__':
-    model = train()
-    model = load_model("..data/model/weights_base.best.hdf5")
-    id = model.predict("She was looking beautiful in the dim light that emanated from my broken table-lamp")
-    print(types[id])
+    # model = train()
+    model = load_model("../data/model/weights_base.best.hdf5")
+    id = model.predict(get_sentence_vec("She was looking beautiful in the dim light that emanated from my broken table-lamp"))
+    print(id)
+    # print(types[int(id)])
