@@ -4,6 +4,10 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import Conv1D, MaxPooling1D, Embedding
 from keras.layers import Dense, Input, Flatten
 from keras.models import Model, load_model
+import numpy as np
+import numpy as np
+import heapq
+
 
 from tw_word2vec.keras_input import embedding_layer, MAX_SEQUENCE_LENGTH, types, get_xy, get_sentence_vec
 
@@ -47,6 +51,17 @@ def train():
 if __name__ == '__main__':
     # model = train()
     model = load_model("../data/model/weights_base.best.hdf5")
-    id = model.predict(get_sentence_vec("She was looking beautiful in the dim light that emanated from my broken table-lamp"))
-    print(id)
-    # print(types[int(id)])
+    doc_vec = get_sentence_vec(
+        ["The most common audits were about waste and recycling"
+         ,"The company fabricates plastic chairs"
+         ,"The school master teaches the lesson with a stick "
+         ])
+    print(doc_vec.shape)
+    x_test, y_test = get_xy("../data/test.txt")
+    id = model.predict(x_test)
+    i = 0
+    for row in id:
+        # print(row)
+        max_index = row.argsort()[-1]
+        print(types[y_test[i].argsort()[-1]]," 测试 ",max_index,types[max_index],)
+        i += 1

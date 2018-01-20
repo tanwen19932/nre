@@ -1,5 +1,6 @@
 import pandas as pd
 from keras.layers import Embedding
+from keras.preprocessing import text
 from keras.preprocessing.sequence import pad_sequences
 from keras.preprocessing.text import Tokenizer
 import numpy as np
@@ -49,15 +50,15 @@ def get_xy(filepath, percent=1):
     # 打乱文章顺序
     y = train['type'].map(lambda x: types.index(x.lower().replace("\n", '')))
     y = to_categorical(np.asarray(y))  # 转化label
-    if(percent==1):
-        return (data,y)
+    if (percent == 1):
+        return (data, y)
     indices = np.arange(data.shape[0])
     np.random.shuffle(indices)
     data = data[indices]
     labels = y[indices]
-    num_validation_samples = int((1-percent) * data.shape[0])
+    num_validation_samples = int((1 - percent) * data.shape[0])
     # 切割数据
-    print("drop num_validation_samples ",num_validation_samples)
+    print("drop num_validation_samples ", num_validation_samples)
     x_train = data[:-num_validation_samples]
     y_train = labels[:-num_validation_samples]
     print('Shape of data tensor:', x_train.shape)
@@ -65,6 +66,7 @@ def get_xy(filepath, percent=1):
     return (x_train, y_train)
 
 
-def get_sentence_vec(sentence):
-    sequences = tokenizer.texts_to_sequences(sentence)
+def get_sentence_vec(list_doc) -> object:
+    sequences = tokenizer.texts_to_sequences(list_doc)
     return pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)
+
