@@ -1,6 +1,5 @@
 import os
 
-from keras import optimizers
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import Conv1D, MaxPooling1D, Embedding
 from keras.layers import Dense, Input, Flatten
@@ -26,8 +25,8 @@ def train():
     print(model.summary())
     # sgd = optimizers.SGD(lr=0.01, day=1e-6, momentum=0.9, nesterov=True)
     model.compile(loss='categorical_crossentropy',
-                  optimizer="adam",
-                  metrics=['sparse_categorical_accuracy'])
+                  optimizer='adam',
+                  metrics=['categorical_accuracy'])
 
     # 如果希望短一些时间可以，epochs调小
 
@@ -35,12 +34,13 @@ def train():
     file_path = "../data/model/weights_base.best.hdf5"
     checkpoint = ModelCheckpoint(file_path, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
     # 当监测值不再改善时，该回调函数将中止训练
-    early = EarlyStopping(monitor="val_loss", mode="max", patience=20)
+    early = EarlyStopping(monitor="val_loss", mode="min", patience=20)
 
     # 开始训练
     callbacks_list = [checkpoint, early]  # early
     x_train, y_train = get_xy("../data/train.txt", 0.8)
     x_test, y_test = get_xy("../data/test.txt")
+    print("x_test 1:" ,x_test[0])
     model.fit(x_train, y_train,
               batch_size=128,
               epochs=50,
@@ -64,10 +64,12 @@ if __name__ == '__main__':
     print(doc_vec.shape)
     x_test, y_test = get_xy("../data/test.txt")
     id = model.predict(x_test)
+    print("x_test 2:", x_test[0])
     i = 0
     right = 0
     for row in id:
-        # print(row)
+        if i==0:
+            print(row)
         max_index = row.argsort()[-1]
         raw_type = types[y_test[i].argsort()[-1]]
         predict_type = types[max_index]
