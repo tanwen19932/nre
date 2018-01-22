@@ -1,7 +1,8 @@
 import os
 
+import keras
 from keras.callbacks import ModelCheckpoint, EarlyStopping
-from keras.layers import Conv1D, MaxPooling1D, Embedding
+from keras.layers import Conv1D, MaxPooling1D, Embedding, Dropout
 from keras.layers import Dense, Input, Flatten
 from keras.models import Model, load_model
 import numpy as np
@@ -14,13 +15,28 @@ from tw_word2vec.keras_input import embedding_layer, MAX_SEQUENCE_LENGTH, types,
 def train():
     sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')  # 100*1最多100个词组成输入
     embedded_sequences = embedding_layer(sequence_input)  # 句子转为向量矩阵 训练集大小*100*300维
-    x = Conv1D(filters=128, kernel_size=5, activation='sigmoid')(embedded_sequences)  # 卷积层5*300成为 96*128
+    # x = concatenate([lstm_out, auxiliary_input])
+    # model test1
+    x = Conv1D(filters=128, kernel_size=5, activation='relu')(embedded_sequences)  # 卷积层5*300成为 96*128
     x = MaxPooling1D(pool_size=2)(x)  # 池化层2*128 stride =2 成为 48*128
-    x = Conv1D(filters=128, kernel_size=5, activation='sigmoid')(x)  # 成为44*128
+    x = Conv1D(filters=128, kernel_size=5, activation='relu')(x)  # 成为44*128
     x = MaxPooling1D(pool_size=3)(x)  # 46*246*128
     x = Flatten()(x)
-    x = Dense(128, activation='sigmoid')(x)  # 128全连接
+    x = Dense(128, activation='relu')(x)  # 128全连接
+    x = Dense(64, activation='relu')(x)  # 128全连接
     preds = Dense(len(types), activation='softmax')(x)  # softmax分类
+
+
+    # model test2
+    c1 = Conv1D(filters=90, kernel_size=3, activation='relu')(embedded_sequences)  # 卷积层5*300成为 98*90
+    c1 = Conv1D(filters=90, kernel_size=4, activation='relu')(c1)  # 卷积层98*90 成为 95*90
+    c1 = Conv1D(filters=60, kernel_size=6, activation='relu')(c1)  # 卷积层95*90 成为 90*60
+    c1 = MaxPooling1D(pool_size=2)(c1) #变为 45*60
+    c1 = Dropout(rate=0.6)(c1)
+    c1 = Flatten()(c1)
+    c1 = Dense(128, activation='relu')(c1)  # 128全连接
+    c1 = Dense(64, activation='relu')(c1)  # 64全连接
+    preds = Dense(len(types), activation='softmax')(c1)  # softmax分类
     model = Model(sequence_input, preds)
     print(model.summary())
     # sgd = optimizers.SGD(lr=0.01, day=1e-6, momentum=0.9, nesterov=True)
