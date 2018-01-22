@@ -1,5 +1,6 @@
 import os
 
+from keras import optimizers
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import Conv1D, MaxPooling1D, Embedding
 from keras.layers import Dense, Input, Flatten
@@ -23,9 +24,10 @@ def train():
     preds = Dense(len(types), activation='softmax')(x)  # softmax分类
     model = Model(sequence_input, preds)
     print(model.summary())
+    # sgd = optimizers.SGD(lr=0.01, day=1e-6, momentum=0.9, nesterov=True)
     model.compile(loss='categorical_crossentropy',
-                  optimizer='adam',
-                  metrics=['categorical_accuracy'])
+                  optimizer="adam",
+                  metrics=['sparse_categorical_accuracy'])
 
     # 如果希望短一些时间可以，epochs调小
 
@@ -33,7 +35,7 @@ def train():
     file_path = "../data/model/weights_base.best.hdf5"
     checkpoint = ModelCheckpoint(file_path, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
     # 当监测值不再改善时，该回调函数将中止训练
-    early = EarlyStopping(monitor="val_loss", mode="min", patience=20)
+    early = EarlyStopping(monitor="val_loss", mode="max", patience=20)
 
     # 开始训练
     callbacks_list = [checkpoint, early]  # early
@@ -50,8 +52,10 @@ def train():
 # model.save(filepath="model1.model")
 
 if __name__ == '__main__':
-    # model = train()
-    model = load_model("../data/model/weights_base.best.hdf5")
+    model = train()
+    filepath="../data/model/weights_base.best.hdf5"
+    model.save(filepath)
+    model = load_model(filepath)
     doc_vec = get_sentence_vec(
         ["The most common audits were about waste and recycling"
             , "The company fabricates plastic chairs"
@@ -61,6 +65,7 @@ if __name__ == '__main__':
     x_test, y_test = get_xy("../data/test.txt")
     id = model.predict(x_test)
     i = 0
+    right = 0
     for row in id:
         # print(row)
         max_index = row.argsort()[-1]
@@ -69,5 +74,7 @@ if __name__ == '__main__':
         is_right = "错误"
         if raw_type.__eq__(predict_type):
             is_right = "正确"
-        print(raw_type, max_index, predict_type,is_right )
+            right+=1
         i += 1
+        print(raw_type, max_index, predict_type,is_right ,float(right/i))
+
