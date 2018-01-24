@@ -9,6 +9,7 @@ import numpy as np
 import numpy as np
 import heapq
 
+from tw_keras import kerasf1
 from tw_word2vec.keras_input import embedding_layer, MAX_SEQUENCE_LENGTH, types, get_xy, get_sentence_vec
 
 
@@ -30,9 +31,9 @@ def train():
     # model test2
     c1 = Conv1D(filters=90, kernel_size=3, activation='relu')(embedded_sequences)  # 卷积层5*300成为 98*90
     c1 = Conv1D(filters=90, kernel_size=4, activation='relu')(c1)  # 卷积层98*90 成为 95*90
-    c1 = Conv1D(filters=60, kernel_size=6, activation='relu')(c1)  # 卷积层95*90 成为 90*60
+    c1 = Conv1D(filters=90, kernel_size=6, activation='relu')(c1)  # 卷积层95*90 成为 90*60
     c1 = MaxPooling1D(pool_size=2)(c1) #变为 45*60
-    c1 = Dropout(rate=0.6)(c1)
+    c1 = Dropout(rate=0.65)(c1)
     c1 = Flatten()(c1)
     c1 = Dense(128, activation='relu')(c1)  # 128全连接
     c1 = Dense(64, activation='relu')(c1)  # 64全连接
@@ -42,7 +43,7 @@ def train():
     # sgd = optimizers.SGD(lr=0.01, day=1e-6, momentum=0.9, nesterov=True)
     model.compile(loss='categorical_crossentropy',
                   optimizer='adam',
-                  metrics=['categorical_accuracy'])
+                  metrics=[kerasf1.f1])
 
     # 如果希望短一些时间可以，epochs调小
 
