@@ -39,9 +39,9 @@ def train():
     preds = Dense(len(types), activation='softmax',kernel_regularizer=regularizers.l2(0.01),activity_regularizer=regularizers.l1(0.001))(c1)  # softmax分类
     model = Model(sequence_input, preds)
     print(model.summary())
-    sgd = optimizers.SGD(lr=0.01, day=1e-6, momentum=0.9, nesterov=True)
+    adam = optimizers.Adam(lr=0.01)
     model.compile(loss='categorical_crossentropy',
-                  optimizer=sgd,
+                  optimizer=adam,
                   metrics=["categorical_accuracy"])
 
     # 如果希望短一些时间可以，epochs调小

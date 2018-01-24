@@ -13,10 +13,8 @@ EMBEDDING_DIM = 300
 MAX_SEQUENCE_LENGTH = 100
 
 default_model: dict = tw_w2v.get_word2vec_dic("../data/needed_word2vec.bin")
-types = ["other", "cause-effect", "component-whole",
-         "entity-destination", "product-producer", "entity-origin",
-         "member-collection", "message-topic",
-         "content-container", "instrument-agency"]
+types = ['Component-Whole(e2,e1)', 'Content-Container(e1,e2)', 'Product-Producer(e2,e1)', 'Other', 'Instrument-Agency(e2,e1)', 'Entity-Destination(e1,e2)', 'Entity-Origin(e1,e2)', 'Instrument-Agency(e1,e2)', 'Cause-Effect(e1,e2)', 'Product-Producer(e1,e2)', 'Member-Collection(e1,e2)', 'Message-Topic(e2,e1)', 'Entity-Origin(e2,e1)', 'Component-Whole(e1,e2)', 'Cause-Effect(e2,e1)', 'Content-Container(e2,e1)', 'Member-Collection(e2,e1)', 'Entity-Destination(e2,e1)', 'Message-Topic(e1,e2)']
+print("类型个数",len(types))
 tokenizer = Tokenizer(num_words=MAX_NB_WORDS)  # 传入我们词向量的字典
 tokenizer.fit_on_texts(default_model.keys())  # 传入我们的训练数据，得到训练数据中出现的词的字典
 
@@ -48,7 +46,7 @@ def get_xy(filepath, percent=1):
     sequences = tokenizer.texts_to_sequences(texts)
     data = pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)  # 限制每篇文章的长度——可作为输入了
     # 打乱文章顺序
-    y = train['type'].map(lambda x: types.index(x.lower().replace("\n", '')))
+    y = train['type'].map(lambda x: types.index(x.replace("\n", '')))
     y = to_categorical(np.asarray(y))  # 转化label
     if (percent == 1):
         return (data, y)
