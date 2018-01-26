@@ -54,9 +54,8 @@ def train():
 
     # 开始训练
     callbacks_list = [checkpoint, early]  # early
-    x_train, y_train = get_xy("../data/train.txt", 0.8)
-    x_test, y_test = get_xy("../data/test.txt")
-    print("x_test 1:" ,x_test[0])
+    x_train, y_train , x_test, y_test= get_xy("../data/train.txt", 0.8)
+    print("x_test 大小:" ,x_test[0])
     model.fit(x_train, y_train,
               batch_size=128,
               epochs=500,

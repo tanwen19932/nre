@@ -59,9 +59,11 @@ def get_xy(filepath, percent=1):
     print("drop num_validation_samples ", num_validation_samples)
     x_train = data[:-num_validation_samples]
     y_train = labels[:-num_validation_samples]
+    x_test = labels[-num_validation_samples:]
+    y_test = labels[-num_validation_samples:]
     print('Shape of data tensor:', x_train.shape)
     print('Shape of label tensor:', y_train.shape)
-    return (x_train, y_train)
+    return (x_train, y_train,x_test,y_test)
 
 
 def get_sentence_vec(list_doc) -> object:
