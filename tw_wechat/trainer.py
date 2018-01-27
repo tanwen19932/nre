@@ -28,7 +28,6 @@ def train():
     x = Dense(64, activation='relu')(x)  # 128全连接
     preds = Dense(len(types), activation='softmax')(x)  # softmax分类
 
-
     # model test2
     c1 = Conv1D(filters=90, kernel_size=5, activation='sigmoid')(embedded_sequences)
     c1 = MaxPooling1D(pool_size=3)(c1)
@@ -36,7 +35,8 @@ def train():
     c1 = Flatten()(c1)
     # c1 = Dense(128, activation='relu')(c1)  # 128全连接
     # c1 = Dense(64, activation='relu')(c1)  # 64全连接
-    preds = Dense(len(types), activation='softmax',kernel_regularizer=regularizers.l2(0.01),activity_regularizer=regularizers.l1(0.001))(c1)  # softmax分类
+    preds = Dense(len(types), activation='softmax', kernel_regularizer=regularizers.l2(0.01),
+                  activity_regularizer=regularizers.l1(0.001))(c1)  # softmax分类
     model = Model(sequence_input, preds)
     print(model.summary())
     adam = optimizers.Adam(lr=0.01)
@@ -54,8 +54,8 @@ def train():
 
     # 开始训练
     callbacks_list = [checkpoint, early]  # early
-    x_train, y_train , x_test, y_test= get_xy("../data/train.txt", 0.8)
-    print("x_test 大小:" ,x_test[0])
+    x_train, y_train, x_test, y_test = get_xy("../data/train.txt", 0.8)
+    print("x_test 大小:", x_test[0])
     model.fit(x_train, y_train,
               batch_size=128,
               epochs=500,
@@ -68,7 +68,7 @@ def train():
 
 if __name__ == '__main__':
     model = train()
-    filepath="../data/model/weights_base.best.hdf5"
+    filepath = "../data/model/weights_base.best.hdf5"
     model.save(filepath)
     model = load_model(filepath)
     doc_vec = get_sentence_vec(
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     i = 0
     right = 0
     for row in id:
-        if i==0:
+        if i == 0:
             print(row)
         max_index = row.argsort()[-1]
         raw_type = types[y_test[i].argsort()[-1]]
@@ -91,7 +91,7 @@ if __name__ == '__main__':
         is_right = "错误"
         if raw_type.__eq__(predict_type):
             is_right = "正确"
-            right+=1
+            right += 1
+        else:
+            print(raw_type, max_index, predict_type, is_right, float(right / i))
         i += 1
-        print(raw_type, max_index, predict_type,is_right ,float(right/i))
-
