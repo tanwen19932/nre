@@ -101,9 +101,10 @@ def getCorpus(from_file,to_file):
     print(types)
     save_file.close()
 
-train_from_file = "../data/SemEval2010_task8_all_data/SemEval2010_task8_training/TRAIN_FILE.TXT"
-test_from_file = "../data/SemEval2010_task8_all_data/SemEval2010_task8_testing_keys/TEST_FILE_FULL.TXT"
-train_to_file = "../data/train.txt"
-test_to_file = "../data/test.txt"
-getCorpus(train_from_file,train_to_file)
-getCorpus(test_from_file,test_to_file)
+if __name__ == '__main__':
+    train_from_file = "../data/SemEval2010_task8_all_data/SemEval2010_task8_training/TRAIN_FILE.TXT"
+    test_from_file = "../data/SemEval2010_task8_all_data/SemEval2010_task8_testing_keys/TEST_FILE_FULL.TXT"
+    train_to_file = "../data/train.txt"
+    test_to_file = "../data/test.txt"
+    getCorpus(train_from_file,train_to_file)
+    getCorpus(test_from_file,test_to_file)

@@ -4,3 +4,5 @@ urllib=1.22
 h5py=2.7.0
 tensorflow=1.4.1
 pandas=0.21.1
+jieba=0.39
+sklearn
