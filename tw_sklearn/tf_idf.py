@@ -45,8 +45,8 @@ if __name__ == "__main__":
         type_all_text = reduce(lambda x, y: x +" "+ y, list)
         type_index.append(type)
 
-        from tw_sklearn.my_nltk import  tokenize_and_stem
-        corpus.append(reduce(lambda x, y: x +" "+ y, tokenize_and_stem(type_all_text)))
+        from tw_sklearn.my_nltk import  tokenize_only
+        corpus.append(reduce(lambda x, y: x +" "+ y, tokenize_only(type_all_text)))
 
     word, weight = get_tfidf(corpus=corpus)
     total_tfidf_dic = dict()
@@ -57,7 +57,7 @@ if __name__ == "__main__":
                 one_dic[word[j]]= weight[i][j]
         total_tfidf_dic[type_index[i]]=one_dic
 
-    print(total_tfidf_dic)
+    # print(total_tfidf_dic)
     import json
     to_json = json.dumps(total_tfidf_dic)
     print(to_json)

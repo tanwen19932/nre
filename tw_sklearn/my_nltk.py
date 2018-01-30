@@ -24,7 +24,7 @@ def tokenize_and_stem(text):
         if re.search('[a-zA-Z]', token):
             if token not in stopwords:
                 filtered_tokens.append(token)
-    stems = [stemmer.stem(t)  for t in filtered_tokens ]
+    stems = [t  for t in filtered_tokens ]
     return stems
 
 
@@ -35,5 +35,6 @@ def tokenize_only(text):
     # 过滤所有不含字母的词例（例如：数字、纯标点）
     for token in tokens:
         if re.search('[a-zA-Z]', token):
-            filtered_tokens.append(token)
+            if token not in stopwords:
+                filtered_tokens.append(token)
     return filtered_tokens
