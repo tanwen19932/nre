@@ -11,57 +11,53 @@ import numpy as np
 import heapq
 
 from tw_keras import kerasf1
+from tw_keras.multi_layer import MultiConv1D
 from tw_word2vec.keras_input import embedding_layer, MAX_SEQUENCE_LENGTH, types, get_xy, get_sentence_vec
 
 
 def train():
     sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')  # 100*1最多100个词组成输入
     embedded_sequences = embedding_layer(sequence_input)  # 句子转为向量矩阵 训练集大小*100*300维
-    # x = concatenate([lstm_out, auxiliary_input])
-    # model test1
-    x = Conv1D(filters=128, kernel_size=5, activation='relu')(embedded_sequences)  # 卷积层5*300成为 96*128
-    x = MaxPooling1D(pool_size=2)(x)  # 池化层2*128 stride =2 成为 48*128
-    x = Conv1D(filters=128, kernel_size=5, activation='relu')(x)  # 成为44*128
-    x = MaxPooling1D(pool_size=3)(x)  # 46*246*128
-    x = Flatten()(x)
-    x = Dense(128, activation='relu')(x)  # 128全连接
-    x = Dense(64, activation='relu')(x)  # 128全连接
-    preds = Dense(len(types), activation='softmax')(x)  # softmax分类
-
     # model test2
-    c1 = Conv1D(filters=90, kernel_size=5, activation='sigmoid')(embedded_sequences)
-    c1 = MaxPooling1D(pool_size=3)(c1)
-    c1 = Dropout(rate=0.6)(c1)
-    c1 = Flatten()(c1)
-    # c1 = Dense(128, activation='relu')(c1)  # 128全连接
-    # c1 = Dense(64, activation='relu')(c1)  # 64全连接
-    preds = Dense(len(types), activation='softmax', kernel_regularizer=regularizers.l2(0.01),
-                  activity_regularizer=regularizers.l1(0.001))(c1)  # softmax分类
-    model = Model(sequence_input, preds)
-    print(model.summary())
-    adam = optimizers.Adam(lr=0.01)
-    model.compile(loss='categorical_crossentropy',
-                  optimizer=adam,
-                  metrics=["categorical_accuracy"])
+    conv1d_1s = MultiConv1D(filters=[90, 80, 70], kernel_size=[3, 4, 5], activation='sigmoid')
+    best_model = None
+    count = 0
+    for conv1d in conv1d_1s:
+        c1 = conv1d(embedded_sequences)
+        c1 = MaxPooling1D(pool_size=3)(c1)
+        c1 = Dropout(rate=0.6)(c1)
+        c1 = Flatten()(c1)
+        # c1 = Dense(128, activation='relu')(c1)  # 128全连接
+        # c1 = Dense(64, activation='relu')(c1)  # 64全连接
+        preds = Dense(len(types), activation='softmax', kernel_regularizer=regularizers.l2(0.01),
+                      activity_regularizer=regularizers.l1(0.001))(c1)  # softmax分类
+        model = Model(sequence_input, preds)
+        print(model.summary())
+        adam = optimizers.Adam(lr=0.01)
+        model.compile(loss='categorical_crossentropy',
+                      optimizer=adam,
+                      metrics=["categorical_accuracy"])
 
-    # 如果希望短一些时间可以，epochs调小
+        # 如果希望短一些时间可以，epochs调小
 
-    # ModelCheckpoint回调函数将在每个epoch后保存模型到filepath，当save_best_only=True保存验证集误差最小的参数
-    file_path = "../data/model/weights_base.best.hdf5"
-    checkpoint = ModelCheckpoint(file_path, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
-    # 当监测值不再改善时，该回调函数将中止训练
-    early = EarlyStopping(monitor="val_loss", mode="min", patience=50)
+        # ModelCheckpoint回调函数将在每个epoch后保存模型到filepath，当save_best_only=True保存验证集误差最小的参数
+        file_path = "../data/model/weights_base.temp",count,".hdf5"
+        checkpoint = ModelCheckpoint(file_path, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+        # 当监测值不再改善时，该回调函数将中止训练
+        early = EarlyStopping(monitor="val_loss", mode="min", patience=50)
 
-    # 开始训练
-    callbacks_list = [checkpoint, early]  # early
-    x_train, y_train, x_test, y_test = get_xy("../data/train.txt", 0.8)
-    print("x_test 大小:", x_test[0])
-    model.fit(x_train, y_train,
-              batch_size=128,
-              epochs=500,
-              validation_data=(x_test, y_test),
-              callbacks=callbacks_list)
-    return model
+        # 开始训练
+        callbacks_list = [checkpoint, early]  # early
+        x_train, y_train, x_test, y_test = get_xy("../data/train.txt", 0.8)
+        model.fit(x_train, y_train,
+                  batch_size=128,
+                  epochs=500,
+                  validation_data=(x_test, y_test),
+                  callbacks=callbacks_list)
+        print(model)
+        count+=1
+        best_model = model
+    return best_model
 
 
 # model.save(filepath="model1.model")
