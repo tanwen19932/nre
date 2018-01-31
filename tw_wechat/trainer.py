@@ -41,7 +41,7 @@ def train():
         # 如果希望短一些时间可以，epochs调小
 
         # ModelCheckpoint回调函数将在每个epoch后保存模型到filepath，当save_best_only=True保存验证集误差最小的参数
-        file_path = "../data/model/weights_base.temp",count,".hdf5"
+        file_path = "../data/model/weights_base.temp"+str(count)+".hdf5"
         checkpoint = ModelCheckpoint(file_path, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
         # 当监测值不再改善时，该回调函数将中止训练
         early = EarlyStopping(monitor="val_loss", mode="min", patience=50)

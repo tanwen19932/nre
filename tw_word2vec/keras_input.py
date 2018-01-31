@@ -43,8 +43,10 @@ def get_xy(filepath, percent=1):
                         names=["type", "e1", "e2", "doc"]
                         )
     texts = train['doc'].values.tolist()
+
     sequences = tokenizer.texts_to_sequences(texts)
     data = pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)  # 限制每篇文章的长度——可作为输入了
+    print(data)
     # 打乱文章顺序
     y = train['type'].map(lambda x: types.index(x.replace("\n", '')))
     y = to_categorical(np.asarray(y))  # 转化label
@@ -65,8 +67,9 @@ def get_xy(filepath, percent=1):
     print('Shape of label tensor:', y_train.shape)
     return (x_train, y_train,x_test,y_test)
 
-
 def get_sentence_vec(list_doc) -> object:
     sequences = tokenizer.texts_to_sequences(list_doc)
     return pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)
 
+if __name__ == '__main__':
+    x_train, y_train, x_test, y_test = get_xy("../data/train.txt", 0.8)
