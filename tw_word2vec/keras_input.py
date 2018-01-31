@@ -1,3 +1,4 @@
+import nltk
 import pandas as pd
 from keras.layers import Embedding
 from keras.preprocessing import text
@@ -8,13 +9,18 @@ from keras.utils import to_categorical
 
 import tw_word2vec.word2vec as tw_w2v
 
+
 MAX_NB_WORDS = 20000
 EMBEDDING_DIM = 300
 MAX_SEQUENCE_LENGTH = 100
 
 default_model: dict = tw_w2v.get_word2vec_dic("../data/needed_word2vec.bin")
-types = ['Component-Whole(e2,e1)', 'Content-Container(e1,e2)', 'Product-Producer(e2,e1)', 'Other', 'Instrument-Agency(e2,e1)', 'Entity-Destination(e1,e2)', 'Entity-Origin(e1,e2)', 'Instrument-Agency(e1,e2)', 'Cause-Effect(e1,e2)', 'Product-Producer(e1,e2)', 'Member-Collection(e1,e2)', 'Message-Topic(e2,e1)', 'Entity-Origin(e2,e1)', 'Component-Whole(e1,e2)', 'Cause-Effect(e2,e1)', 'Content-Container(e2,e1)', 'Member-Collection(e2,e1)', 'Entity-Destination(e2,e1)', 'Message-Topic(e1,e2)']
-print("类型个数",len(types))
+types = ['Component-Whole(e2,e1)', 'Content-Container(e1,e2)', 'Product-Producer(e2,e1)', 'Other',
+         'Instrument-Agency(e2,e1)', 'Entity-Destination(e1,e2)', 'Entity-Origin(e1,e2)', 'Instrument-Agency(e1,e2)',
+         'Cause-Effect(e1,e2)', 'Product-Producer(e1,e2)', 'Member-Collection(e1,e2)', 'Message-Topic(e2,e1)',
+         'Entity-Origin(e2,e1)', 'Component-Whole(e1,e2)', 'Cause-Effect(e2,e1)', 'Content-Container(e2,e1)',
+         'Member-Collection(e2,e1)', 'Entity-Destination(e2,e1)', 'Message-Topic(e1,e2)']
+print("类型个数", len(types))
 tokenizer = Tokenizer(num_words=MAX_NB_WORDS)  # 传入我们词向量的字典
 tokenizer.fit_on_texts(default_model.keys())  # 传入我们的训练数据，得到训练数据中出现的词的字典
 
@@ -42,16 +48,16 @@ def get_xy(filepath, percent=1):
                         # header=["type","e1","e2","doc"],
                         names=["type", "e1", "e2", "doc"]
                         )
-    texts = train['doc'].values.tolist()
 
+    texts = train['doc'].values.tolist()
     sequences = tokenizer.texts_to_sequences(texts)
     data = pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)  # 限制每篇文章的长度——可作为输入了
     print(data)
-    # 打乱文章顺序
     y = train['type'].map(lambda x: types.index(x.replace("\n", '')))
     y = to_categorical(np.asarray(y))  # 转化label
     if (percent == 1):
         return (data, y)
+    # 打乱文章顺序
     indices = np.arange(data.shape[0])
     np.random.shuffle(indices)
     data = data[indices]
@@ -65,11 +71,39 @@ def get_xy(filepath, percent=1):
     y_test = labels[-num_validation_samples:]
     print('Shape of data tensor:', x_train.shape)
     print('Shape of label tensor:', y_train.shape)
-    return (x_train, y_train,x_test,y_test)
+    return (x_train, y_train, x_test, y_test)
+
+
+def add_position(source,data=None):
+    position_matrix = np.random.randn(100, 20)
+    indices = np.arange(source.shape[0])
+    result = list()
+    for i in indices:
+        text = source.loc[i, ['doc']].values[0]
+        e1_position = source.loc[i, ['e1']].values[0]
+        e2_position = source.loc[i, ['e2']].values[0]
+        tokens = []
+        from tw_sklearn.my_nltk import tokenize_only
+        if data is None:
+            tokens = tokenize_only(text)
+        else:
+            tokens = list(filter(lambda x:x!=0,data[i]))
+        sentence_posi_maxtrix = np.zeros((len(tokens),40))
+        for j in range(len(tokens)):
+            e1_pv = position_matrix[j-e1_position]
+            e2_pv = position_matrix[j-e2_position]
+            word_position_matrix = np.append(e1_pv,e2_pv)
+            sentence_posi_maxtrix[j]= word_position_matrix
+        result.append(sentence_posi_maxtrix)
+    return result
+
+def get_keys(d, value):
+    return [k for k,v in d.items() if v == value]
 
 def get_sentence_vec(list_doc) -> object:
     sequences = tokenizer.texts_to_sequences(list_doc)
     return pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)
+
 
 if __name__ == '__main__':
     x_train, y_train, x_test, y_test = get_xy("../data/train.txt", 0.8)
