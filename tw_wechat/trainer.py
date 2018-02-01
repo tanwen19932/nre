@@ -16,10 +16,12 @@ from tw_word2vec.keras_input import embedding_layer, MAX_SEQUENCE_LENGTH, types,
 
 
 def train():
-    sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')  # 100*1最多100个词组成输入
+    sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32', name="sequence_input")  # 100*1最多100个词组成输入
     embedded_sequences = embedding_layer(sequence_input)  # 句子转为向量矩阵 训练集大小*100*300维
     # model test2
-    conv1d_1s = MultiConv1D(filters=[90, 80, 70], kernel_size=[3, 4, 5], activation='sigmoid')
+    posi_input = Input(shape=(MAX_SEQUENCE_LENGTH, 40), name="posi_input")
+    embedded_sequences = keras.layers.concatenate([embedded_sequences, posi_input])
+    conv1d_1s = MultiConv1D(filters=[90, 80, 70, 50, 30, 10], kernel_size=[3, 4, 5], activation='sigmoid')
     best_model = None
     count = 0
     for conv1d in conv1d_1s:
@@ -31,7 +33,7 @@ def train():
         # c1 = Dense(64, activation='relu')(c1)  # 64全连接
         preds = Dense(len(types), activation='softmax', kernel_regularizer=regularizers.l2(0.01),
                       activity_regularizer=regularizers.l1(0.001))(c1)  # softmax分类
-        model = Model(sequence_input, preds)
+        model = Model(inputs=[sequence_input, posi_input], outputs=preds)
         print(model.summary())
         adam = optimizers.Adam(lr=0.01)
         model.compile(loss='categorical_crossentropy',
@@ -41,21 +43,24 @@ def train():
         # 如果希望短一些时间可以，epochs调小
 
         # ModelCheckpoint回调函数将在每个epoch后保存模型到filepath，当save_best_only=True保存验证集误差最小的参数
-        file_path = "../data/model/weights_base.temp"+str(count)+".hdf5"
+        file_path = "../data/model/weights_base.temp" + str(count) + ".hdf5"
         checkpoint = ModelCheckpoint(file_path, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
         # 当监测值不再改善时，该回调函数将中止训练
         early = EarlyStopping(monitor="val_loss", mode="min", patience=50)
 
         # 开始训练
         callbacks_list = [checkpoint, early]  # early
-        x_train, y_train, x_test, y_test = get_xy("../data/train.txt", 0.8)
-        model.fit(x_train, y_train,
+        x_train, x_train_posi, y_train, x_test, x_test_posi, y_test = get_xy("../data/train.txt", 0.8)
+
+        # And trained it via:
+        model.fit({'sequence_input': sequence_input, 'posi_input': posi_input},
+                  y_train,
                   batch_size=128,
-                  epochs=500,
+                  epochs=200,
                   validation_data=(x_test, y_test),
                   callbacks=callbacks_list)
         print(model)
-        count+=1
+        count += 1
         best_model = model
     return best_model
 
@@ -73,7 +78,7 @@ if __name__ == '__main__':
             , "The school master teaches the lesson with a stick "
          ])
     print(doc_vec.shape)
-    x_test, y_test = get_xy("../data/test.txt")
+    x_test, x_posi, y_test = get_xy("../data/test.txt")
     id = model.predict(x_test)
     print("x_test 2:", x_test[0])
     i = 0

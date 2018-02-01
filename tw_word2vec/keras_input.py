@@ -9,7 +9,6 @@ from keras.utils import to_categorical
 
 import tw_word2vec.word2vec as tw_w2v
 
-
 MAX_NB_WORDS = 20000
 EMBEDDING_DIM = 300
 MAX_SEQUENCE_LENGTH = 100
@@ -40,7 +39,7 @@ embedding_layer = Embedding(num_words,  # 词个数
                             weights=[embedding_matrix],  # 向量矩阵
                             input_length=MAX_SEQUENCE_LENGTH,
                             trainable=False)
-
+position_matrix = np.load("../data/posi_matrix.npy")
 
 def get_xy(filepath, percent=1):
     # 读取数据
@@ -52,32 +51,36 @@ def get_xy(filepath, percent=1):
     texts = train['doc'].values.tolist()
     sequences = tokenizer.texts_to_sequences(texts)
     data = pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)  # 限制每篇文章的长度——可作为输入了
-    print(data)
+    data_position = add_position(train, data)
     y = train['type'].map(lambda x: types.index(x.replace("\n", '')))
     y = to_categorical(np.asarray(y))  # 转化label
     if (percent == 1):
-        return (data, y)
+        return (data, data_position, y)
     # 打乱文章顺序
     indices = np.arange(data.shape[0])
     np.random.shuffle(indices)
     data = data[indices]
+    data_position = data_position[indices]
     labels = y[indices]
     num_validation_samples = int((1 - percent) * data.shape[0])
     # 切割数据
     print("drop num_validation_samples ", num_validation_samples)
     x_train = data[:-num_validation_samples]
+    x_train_position = data_position[:-num_validation_samples]
     y_train = labels[:-num_validation_samples]
     x_test = data[-num_validation_samples:]
+    x_test_position = data_position[:-num_validation_samples]
     y_test = labels[-num_validation_samples:]
     print('Shape of data tensor:', x_train.shape)
+    print('Shape of data_posi tensor:', x_train_position.shape)
     print('Shape of label tensor:', y_train.shape)
-    return (x_train, y_train, x_test, y_test)
+    return (x_train, x_train_position, y_train, x_test, x_test_position, y_test)
 
 
-def add_position(source,data=None):
-    position_matrix = np.random.randn(100, 20)
+def add_position(source, data=None):
     indices = np.arange(source.shape[0])
-    result = list()
+    result = np.zeros((len(indices), MAX_SEQUENCE_LENGTH, 40))
+
     for i in indices:
         text = source.loc[i, ['doc']].values[0]
         e1_position = source.loc[i, ['e1']].values[0]
@@ -87,18 +90,20 @@ def add_position(source,data=None):
         if data is None:
             tokens = tokenize_only(text)
         else:
-            tokens = list(filter(lambda x:x!=0,data[i]))
-        sentence_posi_maxtrix = np.zeros((len(tokens),40))
+            tokens = list(filter(lambda x: x != 0, data[i]))
+        sentence_posi_maxtrix = np.zeros((MAX_SEQUENCE_LENGTH, 40))
         for j in range(len(tokens)):
-            e1_pv = position_matrix[j-e1_position]
-            e2_pv = position_matrix[j-e2_position]
-            word_position_matrix = np.append(e1_pv,e2_pv)
-            sentence_posi_maxtrix[j]= word_position_matrix
-        result.append(sentence_posi_maxtrix)
+            e1_pv = position_matrix[j - e1_position]
+            e2_pv = position_matrix[j - e2_position]
+            word_position_matrix = np.append(e1_pv, e2_pv)
+            sentence_posi_maxtrix[-len(tokens) + j] = word_position_matrix
+        result[i] = (sentence_posi_maxtrix)
     return result
 
+
 def get_keys(d, value):
-    return [k for k,v in d.items() if v == value]
+    return [k for k, v in d.items() if v == value]
+
 
 def get_sentence_vec(list_doc) -> object:
     sequences = tokenizer.texts_to_sequences(list_doc)
@@ -106,4 +111,9 @@ def get_sentence_vec(list_doc) -> object:
 
 
 if __name__ == '__main__':
-    x_train, y_train, x_test, y_test = get_xy("../data/train.txt", 0.8)
+    # position_matrix = np.random.randn(100, 20)
+    # np.save("../data/posi_matrix",position_matrix)
+    x_train, x_train_posi, y_train, x_test, x_test_posi, y_test = get_xy("../data/train.txt", 0.8)
+    print(x_train)
+    print(x_train_posi)
+    print(y_train)
