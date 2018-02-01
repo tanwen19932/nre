@@ -6,3 +6,4 @@ tensorflow=1.4.1
 pandas=0.21.1
 jieba=0.39
 sklearn
+nltk=3.2.4
