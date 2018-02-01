@@ -1,5 +1,6 @@
 import nltk
 import pandas as pd
+import os
 from keras.layers import Embedding
 from keras.preprocessing import text
 from keras.preprocessing.sequence import pad_sequences
@@ -39,6 +40,10 @@ embedding_layer = Embedding(num_words,  # 词个数
                             weights=[embedding_matrix],  # 向量矩阵
                             input_length=MAX_SEQUENCE_LENGTH,
                             trainable=False)
+
+if not os.path.isfile("../data/posi_matrix.npy"):
+    position_matrix = np.random.randn(100, 20)
+    np.save("../data/posi_matrix",position_matrix)
 position_matrix = np.load("../data/posi_matrix.npy")
 
 def get_xy(filepath, percent=1):
@@ -111,8 +116,6 @@ def get_sentence_vec(list_doc) -> object:
 
 
 if __name__ == '__main__':
-    # position_matrix = np.random.randn(100, 20)
-    # np.save("../data/posi_matrix",position_matrix)
     x_train, x_train_posi, y_train, x_test, x_test_posi, y_test = get_xy("../data/train.txt", 0.8)
     print(x_train)
     print(x_train_posi)
