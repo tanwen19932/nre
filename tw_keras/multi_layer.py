@@ -26,15 +26,16 @@ class MultiConv1D(object):
             return False
 
     def change2next(self):
-        if self.filter_index==-1:
+        if self.filter_index == -1:
             self.filter_index = 0
         if self.kernel_index + 1 < len(self.kernel_size):
-            res = Conv1D(filters=self.filters[self.filter_index], kernel_size=self.kernel_size[self.kernel_index+1],
+            res = Conv1D(filters=self.filters[self.filter_index], kernel_size=self.kernel_size[self.kernel_index + 1],
                          activation=self.activation)
             self.kernel_index += 1
             return res
         elif self.filter_index + 1 < len(self.filters):
             self.filter_index += 1
+            self.kernel_index = 0
             res = Conv1D(filters=self.filters[self.filter_index], kernel_size=self.kernel_size[self.kernel_index],
                          activation=self.activation)
             return res
@@ -88,6 +89,7 @@ class MultiConv2D(object):
             return res
         elif self.filter_index + 1 < len(self.filters):
             self.filter_index += 1
+            self.kernel_index = 0
             res = Conv2D(filters=self.filters[self.filter_index], kernel_size=self.kernel_size[self.kernel_index],
                          activation=self.activation)
             return res
@@ -109,14 +111,15 @@ class MultiConv2D(object):
                 if (count == n):
                     return Conv2D(filters=filter, kernel_size=kernel,
                                   activation=self.activation)
-                else: count+=1
+                else:
+                    count += 1
         return None
 
 
 if __name__ == '__main__':
-    conv1d_1s = MultiConv1D(filters=[90, 80, 70], kernel_size=[3, 4, 5], activation='sigmoid')
+    conv1d_1s = MultiConv1D(filters=[90, 80, 70, 50, 30, 10], kernel_size=[3, 4, 5], activation='tanh')
     best_model = None
     count = 0
     for conv1d in conv1d_1s:
-        # print("--",conv1d_1s.filter_index,conv1d_1s.kernel_index)
+        print("--", conv1d_1s.filter_index, conv1d_1s.kernel_index)
         pass
