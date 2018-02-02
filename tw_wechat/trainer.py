@@ -68,9 +68,9 @@ def train():
 # model.save(filepath="model1.model")
 
 if __name__ == '__main__':
-    model = train()
+    # model = train()
     filepath = "../data/model/weights_base.best.hdf5"
-    model.save(filepath)
+    # model.save(filepath)
     model = load_model(filepath)
     doc_vec = get_sentence_vec(
         ["The most common audits were about waste and recycling"
@@ -79,7 +79,7 @@ if __name__ == '__main__':
          ])
     print(doc_vec.shape)
     x_test, x_posi, y_test = get_xy("../data/test.txt")
-    id = model.predict(x_test)
+    id = model.predict({'sequence_input': x_test, 'posi_input': x_posi})
     print("x_test 2:", x_test[0])
     i = 0
     right = 0
