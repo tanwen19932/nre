@@ -53,11 +53,11 @@ def train():
         x_train, x_train_posi, y_train, x_test, x_test_posi, y_test = get_xy("../data/train.txt", 0.8)
 
         # And trained it via:
-        model.fit({'sequence_input': sequence_input, 'posi_input': posi_input},
+        model.fit({'sequence_input': x_train, 'posi_input': x_train_posi},
                   y_train,
                   batch_size=128,
                   epochs=200,
-                  validation_data=(x_test, y_test),
+                  validation_data=({'sequence_input': x_test, 'posi_input': x_test_posi}, y_test),
                   callbacks=callbacks_list)
         print(model)
         count += 1

@@ -74,7 +74,7 @@ def get_xy(filepath, percent=1):
     x_train_position = data_position[:-num_validation_samples]
     y_train = labels[:-num_validation_samples]
     x_test = data[-num_validation_samples:]
-    x_test_position = data_position[:-num_validation_samples]
+    x_test_position = data_position[-num_validation_samples:]
     y_test = labels[-num_validation_samples:]
     print('Shape of data tensor:', x_train.shape)
     print('Shape of data_posi tensor:', x_train_position.shape)
@@ -85,7 +85,6 @@ def get_xy(filepath, percent=1):
 def add_position(source, data=None):
     indices = np.arange(source.shape[0])
     result = np.zeros((len(indices), MAX_SEQUENCE_LENGTH, 40))
-
     for i in indices:
         text = source.loc[i, ['doc']].values[0]
         e1_position = source.loc[i, ['e1']].values[0]
