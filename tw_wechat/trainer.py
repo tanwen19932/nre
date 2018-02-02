@@ -28,7 +28,7 @@ def train():
     for conv1d in conv1d_1s:
         c1 = conv1d(embedded_sequences)
         c1 = MaxPooling1D(pool_size=3)(c1)
-        c1 = Dropout(rate=0.6)(c1)
+        c1 = Dropout(rate=0.7)(c1)
         c1 = Flatten()(c1)
         # c1 = Dense(128, activation='relu')(c1)  # 128全连接
         # c1 = Dense(64, activation='relu')(c1)  # 64全连接
@@ -70,7 +70,7 @@ def train():
 # model.save(filepath="model1.model")
 
 if __name__ == '__main__':
-    # model = train()
+    #model = train()
     filepath = "../data/model"
     for file in fileutil.list_dir(filepath):
         # model.save(filepath)
@@ -80,15 +80,11 @@ if __name__ == '__main__':
                 , "The company fabricates plastic chairs"
                 , "The school master teaches the lesson with a stick "
              ])
-        print(doc_vec.shape)
         x_test, x_posi, y_test = get_xy("../data/test.txt")
         id = model.predict({'sequence_input': x_test, 'posi_input': x_posi})
-        print("x_test 2:", x_test[0])
         i = 0
         right = 0
         for row in id:
-            if i == 0:
-                print(row)
             max_index = row.argsort()[-1]
             raw_type = types[y_test[i].argsort()[-1]]
             predict_type = types[max_index]
