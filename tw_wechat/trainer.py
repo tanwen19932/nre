@@ -10,6 +10,7 @@ import numpy as np
 import numpy as np
 import heapq
 
+from tw_common import fileutil
 from tw_keras import kerasf1
 from tw_keras.multi_layer import MultiConv1D
 from tw_word2vec.keras_input import embedding_layer, MAX_SEQUENCE_LENGTH, types, get_xy, get_sentence_vec
@@ -70,30 +71,33 @@ def train():
 
 if __name__ == '__main__':
     # model = train()
-    filepath = "../data/model/weights_base.best.hdf5"
-    # model.save(filepath)
-    model = load_model(filepath)
-    doc_vec = get_sentence_vec(
-        ["The most common audits were about waste and recycling"
-            , "The company fabricates plastic chairs"
-            , "The school master teaches the lesson with a stick "
-         ])
-    print(doc_vec.shape)
-    x_test, x_posi, y_test = get_xy("../data/test.txt")
-    id = model.predict({'sequence_input': x_test, 'posi_input': x_posi})
-    print("x_test 2:", x_test[0])
-    i = 0
-    right = 0
-    for row in id:
-        if i == 0:
-            print(row)
-        max_index = row.argsort()[-1]
-        raw_type = types[y_test[i].argsort()[-1]]
-        predict_type = types[max_index]
-        is_right = "错误"
-        if raw_type.__eq__(predict_type):
-            is_right = "正确"
-            right += 1
-        else:
-            print(raw_type, max_index, predict_type, is_right, float(right / i))
-        i += 1
+    filepath = "../data/model"
+    for file in fileutil.list_dir(filepath):
+        # model.save(filepath)
+        model = load_model(file)
+        doc_vec = get_sentence_vec(
+            ["The most common audits were about waste and recycling"
+                , "The company fabricates plastic chairs"
+                , "The school master teaches the lesson with a stick "
+             ])
+        print(doc_vec.shape)
+        x_test, x_posi, y_test = get_xy("../data/test.txt")
+        id = model.predict({'sequence_input': x_test, 'posi_input': x_posi})
+        print("x_test 2:", x_test[0])
+        i = 0
+        right = 0
+        for row in id:
+            if i == 0:
+                print(row)
+            max_index = row.argsort()[-1]
+            raw_type = types[y_test[i].argsort()[-1]]
+            predict_type = types[max_index]
+            is_right = "错误"
+            if raw_type.__eq__(predict_type):
+                is_right = "正确"
+                right += 1
+            else:
+                # print(raw_type, max_index, predict_type, is_right, float(right / (i + 1)))
+                pass
+            i += 1
+        print(file ,"准确率：",float(right / (len(id))))
