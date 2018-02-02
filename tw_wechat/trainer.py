@@ -21,7 +21,7 @@ def train():
     # model test2
     posi_input = Input(shape=(MAX_SEQUENCE_LENGTH, 40), name="posi_input")
     embedded_sequences = keras.layers.concatenate([embedded_sequences, posi_input])
-    conv1d_1s = MultiConv1D(filters=[90, 80, 70, 50, 30, 10], kernel_size=[3, 4, 5], activation='sigmoid')
+    conv1d_1s = MultiConv1D(filters=[90, 80, 70, 50, 30, 10], kernel_size=[3, 4, 5], activation='tanh')
     best_model = None
     count = 0
     for conv1d in conv1d_1s:
@@ -50,14 +50,15 @@ def train():
 
         # 开始训练
         callbacks_list = [checkpoint, early]  # early
-        x_train, x_train_posi, y_train, x_test, x_test_posi, y_test = get_xy("../data/train.txt", 0.8)
+        x_train, x_train_posi, y_train = get_xy("../data/train.txt")
 
         # And trained it via:
         model.fit({'sequence_input': x_train, 'posi_input': x_train_posi},
                   y_train,
                   batch_size=128,
                   epochs=200,
-                  validation_data=({'sequence_input': x_test, 'posi_input': x_test_posi}, y_test),
+                  validation_split=0.2,
+                  # validation_data=({'sequence_input': x_test, 'posi_input': x_test_posi}, y_test),
                   callbacks=callbacks_list)
         print(model)
         count += 1
