@@ -75,11 +75,6 @@ if __name__ == '__main__':
     for file in fileutil.list_dir(filepath):
         # model.save(filepath)
         model = load_model(file)
-        doc_vec = get_sentence_vec(
-            ["The most common audits were about waste and recycling"
-                , "The company fabricates plastic chairs"
-                , "The school master teaches the lesson with a stick "
-             ])
         x_test, x_posi, y_test = get_xy("../data/test.txt")
         id = model.predict({'sequence_input': x_test, 'posi_input': x_posi})
         i = 0

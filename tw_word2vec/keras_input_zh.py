@@ -4,6 +4,210 @@
 # @Author: TW
 # @Date  : 2018/3/20
 # @Desc  :
+import json
+import os
+from functools import reduce
 
-from tw_segment import  jiebaseg
+import numpy as np
+from bs4 import BeautifulSoup, Tag, NavigableString
+from keras.layers import Embedding
+from keras.preprocessing.sequence import pad_sequences
+from keras.preprocessing.text import Tokenizer
+from keras.utils import to_categorical
 
+import tw_word2vec.word2vec as tw_w2v
+from tw_segment import jiebaseg
+
+MAX_NB_WORDS = 50000
+EMBEDDING_DIM = 64
+MAX_SEQUENCE_LENGTH = 100
+
+default_model: dict = tw_w2v.get_word2vec_dic("../data/needed_zh_word2vec.bin")
+types = ['Component-Whole(e2,e1)', 'Content-Container(e1,e2)', 'Product-Producer(e2,e1)', 'Other',
+         'Instrument-Agency(e2,e1)', 'Entity-Destination(e1,e2)', 'Entity-Origin(e1,e2)', 'Instrument-Agency(e1,e2)',
+         'Cause-Effect(e1,e2)', 'Product-Producer(e1,e2)', 'Member-Collection(e1,e2)', 'Message-Topic(e2,e1)',
+         'Entity-Origin(e2,e1)', 'Component-Whole(e1,e2)', 'Cause-Effect(e2,e1)', 'Content-Container(e2,e1)',
+         'Member-Collection(e2,e1)', 'Entity-Destination(e2,e1)', 'Message-Topic(e1,e2)']
+print("类型个数", len(types))
+tokenizer = Tokenizer(num_words=MAX_NB_WORDS)  # 传入我们词向量的字典
+tokenizer.fit_on_texts(default_model.keys())  # 传入我们的训练数据，得到训练数据中出现的词的字典
+word_index = tokenizer.word_index
+num_words = min(MAX_NB_WORDS, len(word_index))
+all_pos_set = set(['a', 'ud', 'd', 'r', 'per', 'v'])
+
+##获取embedding的矩阵。主要是kears的矩阵index转化
+embedding_matrix = np.zeros((num_words, EMBEDDING_DIM))
+for word, i in word_index.items():
+    if i >= MAX_NB_WORDS:
+        continue
+    embedding_vector = default_model[word]
+    if embedding_vector is not None:
+        # 文本数据中的词在词向量字典中没有，向量为取0；如果有则取词向量中该词的向量
+        try:
+            embedding_matrix[i] = embedding_vector
+        except:
+            pass
+
+embedding_layer = Embedding(num_words,  # 词个数
+                            EMBEDDING_DIM,  # 维向量
+                            weights=[embedding_matrix],  # 向量矩阵
+                            input_length=MAX_SEQUENCE_LENGTH,
+                            trainable=False)
+##初始化位置向量
+if not os.path.isfile("../data/posi_matrix.npy"):
+    position_matrix = np.random.randn(100, 20)
+    np.save("../data/posi_matrix", position_matrix)
+position_matrix = np.load("../data/posi_matrix.npy")
+keyword = {}
+
+with open("../data/tf_idf.txt", 'r') as load_f:
+    keyword = json.load(load_f)
+
+
+class SentencesVector():
+    sentence_vec = None
+    position_vec = None
+    pos_vec = None
+    classifications_vec = None
+
+    def __init__(self, sentences, classifications=None) -> None:
+        if not isinstance(sentences, list):
+            raise Exception("传入句子list")
+        pairs_all = []
+        position_all = []
+        for sentence in sentences:
+            soup = BeautifulSoup(sentence, "html5lib")
+            pairs = []
+            e_count = 0
+            temp_str = ""
+            for tag in soup.body.contents:
+                if isinstance(tag, Tag):
+                    pairs.extend(jiebaseg.segOnly(temp_str))
+                    from jieba.posseg import pair
+                    pairs.append(pair(tag.text, tag.name))
+                    if (e_count == 0):
+                        position_e1 = len(pairs) - 1
+                    elif (e_count == 1):
+                        position_e2 = len(pairs) - 1
+                    temp_str = ""
+                    e_count += 1
+                elif isinstance(tag, NavigableString):
+                    temp_str += tag
+                if e_count > 2:
+                    break
+            if (e_count > 2):
+                continue
+            if (e_count != 2):
+                continue
+            if (len(temp_str) > 0):
+                pairs.extend(jiebaseg.segOnly(temp_str))
+            pairs_all.append(pairs)
+            position_all.append((position_e1, position_e2))
+        # 获取句子向量
+        texts = list(map(lambda pair: reduce(lambda x, y: x + y, map(lambda x: x.word + " ", pair)), pairs_all))
+        sequences = tokenizer.texts_to_sequences(texts)
+        self.sentence_vec = pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)
+        # 获取位置向量
+        self.position_vec = np.zeros((len(position_all), MAX_SEQUENCE_LENGTH, 40))
+        for i in range(len(position_all)):
+            e1_position = position_all[i][0]
+            e2_position = position_all[i][1]
+            sentence_posi_maxtrix = np.zeros((MAX_SEQUENCE_LENGTH, 40))
+            tokens = list(map(lambda x: x.word, pairs_all[i]))
+            for j in range(len(tokens)):
+                e1_pv = position_matrix[j - e1_position]
+                e2_pv = position_matrix[j - e2_position]
+                word_position_matrix = np.append(e1_pv, e2_pv)
+                sentence_posi_maxtrix[-len(tokens) + j] = word_position_matrix
+            self.position_vec[i:] = sentence_posi_maxtrix
+        # 获取词性向量
+        from tw_word2vec.keras_input_zh import all_pos_set
+        if len(all_pos_set) == 0:
+            for pairs in pairs_all:
+                all_pos_set |= set(map(lambda x: x.flag, pairs))
+        all_pos = list(all_pos_set)
+        self.pos_vec = np.zeros((len(pairs_all), MAX_SEQUENCE_LENGTH, len(all_pos)))
+        for i in range(len(pairs_all)):
+            pos_y = list(map(lambda x: all_pos.index(x.flag), pairs_all[i]))
+            pos_matrix = to_categorical(pos_y, len(all_pos))
+            pos_matrix_all = np.zeros((MAX_SEQUENCE_LENGTH, len(all_pos)))
+            pos_matrix_all[-len(pos_matrix):] = pos_matrix
+            self.pos_vec[i:] = pos_matrix_all
+        if classifications != None:
+            classifications_y = list(map(lambda x: types.index(x), classifications))
+            self.classifications_vec = to_categorical(classifications_y, len(types))
+
+
+import keras
+from keras import optimizers
+from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.layers import MaxPooling1D, Dropout, regularizers
+from keras.layers import Dense, Input, Flatten
+from keras.models import Model
+import numpy as np
+
+from tw_keras.multi_layer import MultiConv1D
+
+
+def train(sentences_vector: SentencesVector):
+    sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32', name="sequence_input")  # 100*1最多100个词组成输入
+    embedded_sequences = embedding_layer(sequence_input)  # 句子转为向量矩阵 训练集大小*100*64维
+    # model test2
+    posi_input = Input(shape=(MAX_SEQUENCE_LENGTH, 40), name="posi_input")
+    pos_input = Input(shape=(MAX_SEQUENCE_LENGTH, len(all_pos_set)), name="pos_input")
+    embedded_sequences = keras.layers.concatenate([embedded_sequences, posi_input, pos_input])
+    conv1d_1s = MultiConv1D(filters=[90, 80, 70, 50, 30, 10], kernel_size=[3, 4, 5], activation='relu')
+    best_model = None
+    count = 0
+    for conv1d in conv1d_1s:
+        c1 = conv1d(embedded_sequences)
+        c1 = MaxPooling1D(pool_size=3)(c1)
+        c1 = Dropout(rate=0.7)(c1)
+        c1 = Flatten()(c1)
+        # c1 = Dense(128, activation='relu')(c1)  # 128全连接
+        # c1 = Dense(64, activation='relu')(c1)  # 64全连接
+        preds = Dense(len(types), activation='softmax', kernel_regularizer=regularizers.l2(0.01),
+                      activity_regularizer=regularizers.l1(0.001))(c1)  # softmax分类
+        model = Model(inputs=[sequence_input, posi_input, pos_input], outputs=preds)
+        print(model.summary())
+        adam = optimizers.Adam(lr=0.001, decay=0.0001)
+        model.compile(loss='categorical_crossentropy',
+                      optimizer=adam,
+                      metrics=["categorical_accuracy"])
+
+        # 如果希望短一些时间可以，epochs调小
+
+        # ModelCheckpoint回调函数将在每个epoch后保存模型到filepath，当save_best_only=True保存验证集误差最小的参数
+        file_path = "../data/model/weights_base.temp" + str(count) + ".hdf5"
+        checkpoint = ModelCheckpoint(file_path, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+        # 当监测值不再改善时，该回调函数将中止训练
+        early = EarlyStopping(monitor="val_loss", mode="min", patience=50)
+
+        # 开始训练
+        callbacks_list = [checkpoint, early]  # early
+        # And trained it via:
+        model.fit({'sequence_input': sentences_vector.sentence_vec, 'posi_input': sentences_vector.position_vec,
+                   'pos_input': sentences_vector.pos_vec},
+                  sentences_vector.classifications_vec,
+                  batch_size=128,
+                  epochs=500,
+                  validation_split=0.2,
+                  # validation_data=({'sequence_input': x_test, 'posi_input': x_test_posi}, y_test),
+                  callbacks=callbacks_list)
+        print(model)
+        count += 1
+        best_model = model
+    return best_model
+
+
+if __name__ == '__main__':
+    vector = SentencesVector(["<per>你</per>这<per>招</per>打得很不错"], ["Component-Whole(e2,e1)"])
+    print(vector.sentence_vec)
+    print(vector.position_vec)
+    print(vector.pos_vec)
+    print(vector.classifications_vec)
+    train(vector)
+
+
+
+    # get_sentence_vec("<per>你</per>这<per>招<per>打得很不错")

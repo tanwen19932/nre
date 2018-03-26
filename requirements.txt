@@ -7,3 +7,5 @@ pandas==0.21.1
 jieba==0.39
 sklearn
 nltk==3.2.4
+jieba==0.39
+bs4==0.0.1
