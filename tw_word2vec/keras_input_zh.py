@@ -23,18 +23,19 @@ EMBEDDING_DIM = 64
 MAX_SEQUENCE_LENGTH = 100
 
 default_model: dict = tw_w2v.get_word2vec_dic("../data/needed_zh_word2vec.bin")
-types = ['Component-Whole(e2,e1)', 'Content-Container(e1,e2)', 'Product-Producer(e2,e1)', 'Other',
-         'Instrument-Agency(e2,e1)', 'Entity-Destination(e1,e2)', 'Entity-Origin(e1,e2)', 'Instrument-Agency(e1,e2)',
-         'Cause-Effect(e1,e2)', 'Product-Producer(e1,e2)', 'Member-Collection(e1,e2)', 'Message-Topic(e2,e1)',
-         'Entity-Origin(e2,e1)', 'Component-Whole(e1,e2)', 'Cause-Effect(e2,e1)', 'Content-Container(e2,e1)',
-         'Member-Collection(e2,e1)', 'Entity-Destination(e2,e1)', 'Message-Topic(e1,e2)']
+from tw_relation.relations import relations_zh
+
+types = relations_zh
 print("类型个数", len(types))
 tokenizer = Tokenizer(num_words=MAX_NB_WORDS)  # 传入我们词向量的字典
 tokenizer.fit_on_texts(default_model.keys())  # 传入我们的训练数据，得到训练数据中出现的词的字典
 word_index = tokenizer.word_index
 num_words = min(MAX_NB_WORDS, len(word_index))
-all_pos_set = set(['a', 'ud', 'd', 'r', 'per', 'v'])
-
+all_pos_list = []
+with open("../data/pos_list.txt") as f:
+    for line in f.readlines():
+        if len(line.strip())>0:
+            all_pos_list.append(line.strip())
 ##获取embedding的矩阵。主要是kears的矩阵index转化
 embedding_matrix = np.zeros((num_words, EMBEDDING_DIM))
 for word, i in word_index.items():
@@ -121,11 +122,19 @@ class SentencesVector():
                 sentence_posi_maxtrix[-len(tokens) + j] = word_position_matrix
             self.position_vec[i:] = sentence_posi_maxtrix
         # 获取词性向量
-        from tw_word2vec.keras_input_zh import all_pos_set
-        if len(all_pos_set) == 0:
-            for pairs in pairs_all:
-                all_pos_set |= set(map(lambda x: x.flag, pairs))
-        all_pos = list(all_pos_set)
+        from tw_word2vec.keras_input_zh import all_pos_list
+        all_pos_set = set(all_pos_list)
+        for pairs in pairs_all:
+            for pair in pairs:
+                if not all_pos_set.__contains__(pair.flag):
+                    all_pos_list.append(pair.flag)
+                    all_pos_set.add(pair.flag)
+        with open("../data/pos_list.txt","w") as f:
+            for pos in all_pos_list:
+                f.write(pos)
+                f.write("\n")
+
+        all_pos = list(all_pos_list)
         self.pos_vec = np.zeros((len(pairs_all), MAX_SEQUENCE_LENGTH, len(all_pos)))
         for i in range(len(pairs_all)):
             pos_y = list(map(lambda x: all_pos.index(x.flag), pairs_all[i]))
@@ -143,7 +152,7 @@ from keras import optimizers
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import MaxPooling1D, Dropout, regularizers
 from keras.layers import Dense, Input, Flatten
-from keras.models import Model
+from keras.models import Model, load_model
 import numpy as np
 
 from tw_keras.multi_layer import MultiConv1D
@@ -154,7 +163,7 @@ def train(sentences_vector: SentencesVector):
     embedded_sequences = embedding_layer(sequence_input)  # 句子转为向量矩阵 训练集大小*100*64维
     # model test2
     posi_input = Input(shape=(MAX_SEQUENCE_LENGTH, 40), name="posi_input")
-    pos_input = Input(shape=(MAX_SEQUENCE_LENGTH, len(all_pos_set)), name="pos_input")
+    pos_input = Input(shape=(MAX_SEQUENCE_LENGTH, len(all_pos_list)), name="pos_input")
     embedded_sequences = keras.layers.concatenate([embedded_sequences, posi_input, pos_input])
     conv1d_1s = MultiConv1D(filters=[90, 80, 70, 50, 30, 10], kernel_size=[3, 4, 5], activation='relu')
     best_model = None
@@ -178,7 +187,7 @@ def train(sentences_vector: SentencesVector):
         # 如果希望短一些时间可以，epochs调小
 
         # ModelCheckpoint回调函数将在每个epoch后保存模型到filepath，当save_best_only=True保存验证集误差最小的参数
-        file_path = "../data/model/weights_base.temp" + str(count) + ".hdf5"
+        file_path = "../data/model/re_zh_model.temp" + str(count) + ".hdf5"
         checkpoint = ModelCheckpoint(file_path, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
         # 当监测值不再改善时，该回调函数将中止训练
         early = EarlyStopping(monitor="val_loss", mode="min", patience=50)
@@ -200,14 +209,36 @@ def train(sentences_vector: SentencesVector):
     return best_model
 
 
+def predict(sentence_vector: SentencesVector):
+    id = model.predict({'sequence_input': sentence_vector.sentence_vec, 'posi_input': sentence_vector.position_vec,
+                        'pos_input': sentence_vector.pos_vec})
+    output = []
+    for row in id:
+        max_index = row.argsort()[-1]
+        # raw_type = types[y_test[i].argsort()[-1]]
+        predict_type = types[max_index]
+        output.append(predict_type)
+    return output
+
+
+def getSentenceVectorFromFile(file):
+    file_types = []
+    file_sentences = []
+    with open(file, 'r') as f:
+        for line in f.readlines():
+            file_types.append(line.split("|")[0])
+            file_sentences.append(line.split("|")[1])
+    return SentencesVector(file_sentences, file_types)
+
+
 if __name__ == '__main__':
-    vector = SentencesVector(["<per>你</per>这<per>招</per>打得很不错"], ["Component-Whole(e2,e1)"])
+    vector = getSentenceVectorFromFile("../data/train_zh.txt")
     print(vector.sentence_vec)
     print(vector.position_vec)
     print(vector.pos_vec)
     print(vector.classifications_vec)
     train(vector)
-
+    model = load_model("../data/model/re_zh_model.temp1.hdf5")
 
 
     # get_sentence_vec("<per>你</per>这<per>招<per>打得很不错")
