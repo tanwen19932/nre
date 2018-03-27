@@ -34,7 +34,7 @@ num_words = min(MAX_NB_WORDS, len(word_index))
 all_pos_list = []
 with open("../data/pos_list.txt") as f:
     for line in f.readlines():
-        if len(line.strip())>0:
+        if len(line.strip()) > 0:
             all_pos_list.append(line.strip())
 ##获取embedding的矩阵。主要是kears的矩阵index转化
 embedding_matrix = np.zeros((num_words, EMBEDDING_DIM))
@@ -129,7 +129,7 @@ class SentencesVector():
                 if not all_pos_set.__contains__(pair.flag):
                     all_pos_list.append(pair.flag)
                     all_pos_set.add(pair.flag)
-        with open("../data/pos_list.txt","w") as f:
+        with open("../data/pos_list.txt", "w") as f:
             for pos in all_pos_list:
                 f.write(pos)
                 f.write("\n")
@@ -165,7 +165,8 @@ def train(sentences_vector: SentencesVector):
     posi_input = Input(shape=(MAX_SEQUENCE_LENGTH, 40), name="posi_input")
     pos_input = Input(shape=(MAX_SEQUENCE_LENGTH, len(all_pos_list)), name="pos_input")
     embedded_sequences = keras.layers.concatenate([embedded_sequences, posi_input, pos_input])
-    conv1d_1s = MultiConv1D(filters=[90, 80, 70, 50, 30, 10], kernel_size=[3, 4, 5], activation='relu')
+    # conv1d_1s = MultiConv1D(filters=[90, 80, 70, 50, 30, 10], kernel_size=[3, 4, 5], activation='relu')
+    conv1d_1s = MultiConv1D(filters=[10], kernel_size=[3], activation='relu')
     best_model = None
     count = 0
     for conv1d in conv1d_1s:
@@ -200,10 +201,9 @@ def train(sentences_vector: SentencesVector):
                   sentences_vector.classifications_vec,
                   batch_size=128,
                   epochs=500,
-                  validation_split=0.2,
+                  # validation_split=0.2,
                   # validation_data=({'sequence_input': x_test, 'posi_input': x_test_posi}, y_test),
                   callbacks=callbacks_list)
-        print(model)
         count += 1
         best_model = model
     return best_model
@@ -216,6 +216,8 @@ def predict(sentence_vector: SentencesVector):
     for row in id:
         max_index = row.argsort()[-1]
         # raw_type = types[y_test[i].argsort()[-1]]
+        for i in range(len(row)):
+            print(types[i],row[i])
         predict_type = types[max_index]
         output.append(predict_type)
     return output
@@ -237,8 +239,10 @@ if __name__ == '__main__':
     print(vector.position_vec)
     print(vector.pos_vec)
     print(vector.classifications_vec)
-    train(vector)
-    model = load_model("../data/model/re_zh_model.temp1.hdf5")
+    model = train(vector)
+    # model = load_model("../data/model/re_zh_model.temp0.hdf5")
 
-
+    output = predict(SentencesVector(["<per>你</per>准备坐<instrument>船</instrument>去那边",
+                                      "<food>粉丝</food>由<food>马铃薯</food>加工"]))
+    print(output)
     # get_sentence_vec("<per>你</per>这<per>招<per>打得很不错")
