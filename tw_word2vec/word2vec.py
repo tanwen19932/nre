@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import numpy as np
 from keras.preprocessing import text, sequence
-from tw_segment import  jiebaseg
+from tw_segment import  jieba_seg
 def get_word2vec_dic(filepath):
     return Word2VecHelpper(filepath=filepath).word2vec_model
 
@@ -59,7 +59,7 @@ def saveZh(filepath):
     with open("../data/rawZhData/news_raw_wc2017-12-19.txt", "r") as f:
         for line in f.readlines():
             line = line.strip()
-            all_word_with_pos.extend( jiebaseg.segWithNER(line))
+            all_word_with_pos.extend( jieba_seg.segWithNER(line))
     need_word2vec = {}
     tokenizer = text.Tokenizer(num_words=100)
     tokenizer.fit_on_texts(list(map(lambda x:x.word,all_word_with_pos)))

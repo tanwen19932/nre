@@ -9,21 +9,20 @@ import os
 from functools import reduce
 
 import numpy as np
-from bs4 import BeautifulSoup, Tag, NavigableString
 from keras.layers import Embedding
 from keras.preprocessing.sequence import pad_sequences
 from keras.preprocessing.text import Tokenizer
 from keras.utils import to_categorical
 
 import tw_word2vec.word2vec as tw_w2v
-from tw_segment import jiebaseg
+from tw_segment import jieba_seg
 
 MAX_NB_WORDS = 50000
 EMBEDDING_DIM = 64
 MAX_SEQUENCE_LENGTH = 100
 
 default_model: dict = tw_w2v.get_word2vec_dic("../data/needed_zh_word2vec.bin")
-from tw_relation.relations import relations_zh
+from tw_relation.relations import relations_zh, relation_word_dic_zh, getRelationDetail
 
 types = relations_zh
 print("类型个数", len(types))
@@ -74,36 +73,7 @@ class SentencesVector():
     def __init__(self, sentences, classifications=None) -> None:
         if not isinstance(sentences, list):
             raise Exception("传入句子list")
-        pairs_all = []
-        position_all = []
-        for sentence in sentences:
-            soup = BeautifulSoup(sentence, "html5lib")
-            pairs = []
-            e_count = 0
-            temp_str = ""
-            for tag in soup.body.contents:
-                if isinstance(tag, Tag):
-                    pairs.extend(jiebaseg.segOnly(temp_str))
-                    from jieba.posseg import pair
-                    pairs.append(pair(tag.text, tag.name))
-                    if (e_count == 0):
-                        position_e1 = len(pairs) - 1
-                    elif (e_count == 1):
-                        position_e2 = len(pairs) - 1
-                    temp_str = ""
-                    e_count += 1
-                elif isinstance(tag, NavigableString):
-                    temp_str += tag
-                if e_count > 2:
-                    break
-            if (e_count > 2):
-                continue
-            if (e_count != 2):
-                continue
-            if (len(temp_str) > 0):
-                pairs.extend(jiebaseg.segOnly(temp_str))
-            pairs_all.append(pairs)
-            position_all.append((position_e1, position_e2))
+        pairs_all,position_all = jieba_seg.segListWithNerTag(sentences)
         # 获取句子向量
         texts = list(map(lambda pair: reduce(lambda x, y: x + y, map(lambda x: x.word + " ", pair)), pairs_all))
         sequences = tokenizer.texts_to_sequences(texts)
@@ -233,16 +203,37 @@ def getSentenceVectorFromFile(file):
     return SentencesVector(file_sentences, file_types)
 
 
-if __name__ == '__main__':
-    vector = getSentenceVectorFromFile("../data/train_zh.txt")
-    print(vector.sentence_vec)
-    print(vector.position_vec)
-    print(vector.pos_vec)
-    print(vector.classifications_vec)
-    model = train(vector)
-    # model = load_model("../data/model/re_zh_model.temp0.hdf5")
+def getSentenceRelation(predict_texts:list,predict_types):
+    relations = []
+    for i in range(len(predict_texts)):
+        relation_words = relation_word_dic_zh.get(predict_types[i])
+        appended = False
+        for relation_word in relation_words:
+            if predict_texts[i].contains(relation_word):
+                relations.append(relation_word)
+                continue
+        if not appended:
+            relations.append("未知")
+    return relations
 
-    output = predict(SentencesVector(["<per>你</per>准备坐<instrument>船</instrument>去那边",
-                                      "<food>粉丝</food>由<food>马铃薯</food>加工"]))
-    print(output)
+if __name__ == '__main__':
+    import os
+    model_path = "../data/model/re_zh_model.temp0.hdf5"
+    if not os.path.exists(model_path):
+        vector = getSentenceVectorFromFile("../data/train_zh.txt")
+        print(vector.sentence_vec)
+        print(vector.position_vec)
+        print(vector.pos_vec)
+        print(vector.classifications_vec)
+        model = train(vector)
+        model.save(model_path)
+    model = load_model(model_path)
+    predict_texts = ["<per>你</per>准备坐<instrument>船</instrument>去那边",
+                                      "<food>粉丝</food>由<food>马铃薯</food>加工"]
+    predict_types = predict(SentencesVector(predict_texts))
+    print(predict_types)
+    # print(getSentenceRelation(predict_texts,predict_types))
+    print(getRelationDetail(predict_texts))
+
+
     # get_sentence_vec("<per>你</per>这<per>招<per>打得很不错")
