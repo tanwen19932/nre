@@ -142,7 +142,7 @@ def getRelationDetail(sentence_list):
         result = ''
         for word in words:
             result += word + " "
-        relations_detail.append(result)
+        relations_detail.append(result.strip())
     return relations_detail
 
 

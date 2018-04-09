@@ -179,6 +179,27 @@ def train(sentences_vector: SentencesVector):
     return best_model
 
 
+def getSentenceVectorFromFile(file):
+    file_types = []
+    file_sentences = []
+    with open(file, 'r') as f:
+        for line in f.readlines():
+            file_types.append(line.split("|")[0])
+            file_sentences.append(line.split("|")[1])
+    return SentencesVector(file_sentences, file_types)
+
+import os
+model_path = "../data/model/re_zh_model.temp0.hdf5"
+if not os.path.exists(model_path):
+    vector = getSentenceVectorFromFile("../data/train_zh.txt")
+    print(vector.sentence_vec)
+    print(vector.position_vec)
+    print(vector.pos_vec)
+    print(vector.classifications_vec)
+    model = train(vector)
+    model.save(model_path)
+model = load_model(model_path)
+
 def predict(sentence_vector: SentencesVector):
     id = model.predict({'sequence_input': sentence_vector.sentence_vec, 'posi_input': sentence_vector.position_vec,
                         'pos_input': sentence_vector.pos_vec})
@@ -192,15 +213,6 @@ def predict(sentence_vector: SentencesVector):
         output.append(predict_type)
     return output
 
-
-def getSentenceVectorFromFile(file):
-    file_types = []
-    file_sentences = []
-    with open(file, 'r') as f:
-        for line in f.readlines():
-            file_types.append(line.split("|")[0])
-            file_sentences.append(line.split("|")[1])
-    return SentencesVector(file_sentences, file_types)
 
 
 def getSentenceRelation(predict_texts:list,predict_types):
@@ -216,24 +228,32 @@ def getSentenceRelation(predict_texts:list,predict_types):
             relations.append("未知")
     return relations
 
+def getDescription(predict_texts:list):
+    from tw_segment.jieba_seg import segListWithNerTag
+    pairs_all, position_all = segListWithNerTag(predict_texts)
+
+    predict_types = predict(SentencesVector(predict_texts))
+    predict_details = getRelationDetail(predict_texts)
+    result = []
+    import json
+    for i in range(len(position_all)):
+        entity1= pairs_all[i][position_all[i][0]]
+        entity2= pairs_all[i][position_all[i][1]]
+        obj = {}
+        obj["e1"] = entity1.word
+        obj["e1_type"] = entity1.flag
+        obj["e2"] = entity2.word
+        obj["e2_type"] = entity2.flag
+        obj["predict_type"] = predict_types[i]
+        obj["relation_detail"] = predict_details[i]
+        result.append(obj)
+    return result
+
 if __name__ == '__main__':
-    import os
-    model_path = "../data/model/re_zh_model.temp0.hdf5"
-    if not os.path.exists(model_path):
-        vector = getSentenceVectorFromFile("../data/train_zh.txt")
-        print(vector.sentence_vec)
-        print(vector.position_vec)
-        print(vector.pos_vec)
-        print(vector.classifications_vec)
-        model = train(vector)
-        model.save(model_path)
-    model = load_model(model_path)
     predict_texts = ["<per>你</per>准备坐<instrument>船</instrument>去那边",
                                       "<food>粉丝</food>由<food>马铃薯</food>加工"]
-    predict_types = predict(SentencesVector(predict_texts))
-    print(predict_types)
     # print(getSentenceRelation(predict_texts,predict_types))
-    print(getRelationDetail(predict_texts))
+    print(getDescription(predict_texts))
 
 
     # get_sentence_vec("<per>你</per>这<per>招<per>打得很不错")
