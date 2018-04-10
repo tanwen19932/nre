@@ -74,15 +74,18 @@ keras TensorFlow Backend
 直接调用tw_webservice/ws.py 启动  
 端口默认为8005 调用地址为localhost:8005/re  
 参数
-> {
+```
+{
 	"sentences":[
 		"\<per>你\</per>准备坐\<instrument>船\</instrument>去那边",
 		"\<food>粉丝\</food>由\<food>马铃薯\</food>加工"
 		]
 }
+```
 
 返回结果
->{
+```
+{
     "result": [
         {
             "e1": "你",
@@ -103,4 +106,5 @@ keras TensorFlow Backend
     ],
     "is_ok": true
 }
+```
 
