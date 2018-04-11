@@ -22,7 +22,7 @@ def train():
     # model test2
     posi_input = Input(shape=(MAX_SEQUENCE_LENGTH, 40), name="posi_input")
     embedded_sequences = keras.layers.concatenate([embedded_sequences, posi_input])
-    conv1d_1s = MultiConv1D(filters=[1024, 512, 256, 128, 64, 32], kernel_size=[1,2,3, 4, 5], activation='relu')
+    conv1d_1s = MultiConv1D(filters=[90, 80, 70, 50, 30, 10], kernel_size=[3, 4, 5], activation='relu')
     best_model = None
     count = 0
     for conv1d in conv1d_1s:
@@ -32,10 +32,11 @@ def train():
         c1 = Flatten()(c1)
         # c1 = Dense(128, activation='relu')(c1)  # 128全连接
         # c1 = Dense(64, activation='relu')(c1)  # 64全连接
-        preds = Dense(len(types), activation='softmax')(c1)  # softmax分类
+        preds = Dense(len(types), activation='softmax', kernel_regularizer=regularizers.l2(0.01),
+                      activity_regularizer=regularizers.l1(0.001))(c1)  # softmax分类
         model = Model(inputs=[sequence_input, posi_input], outputs=preds)
         print(model.summary())
-        adam = optimizers.Adam(lr=0.01)
+        adam = optimizers.Adam(lr=0.001,decay=0.0001)
         model.compile(loss='categorical_crossentropy',
                       optimizer=adam,
                       metrics=["categorical_accuracy"])
@@ -56,7 +57,7 @@ def train():
         model.fit({'sequence_input': x_train, 'posi_input': x_train_posi},
                   y_train,
                   batch_size=128,
-                  epochs=200,
+                  epochs=500,
                   validation_split=0.2,
                   # validation_data=({'sequence_input': x_test, 'posi_input': x_test_posi}, y_test),
                   callbacks=callbacks_list)
@@ -74,11 +75,6 @@ if __name__ == '__main__':
     for file in fileutil.list_dir(filepath):
         # model.save(filepath)
         model = load_model(file)
-        doc_vec = get_sentence_vec(
-            ["The most common audits were about waste and recycling"
-                , "The company fabricates plastic chairs"
-                , "The school master teaches the lesson with a stick "
-             ])
         x_test, x_posi, y_test = get_xy("../data/test.txt")
         id = model.predict({'sequence_input': x_test, 'posi_input': x_posi})
         i = 0

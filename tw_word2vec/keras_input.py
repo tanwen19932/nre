@@ -7,7 +7,9 @@ from keras.preprocessing.sequence import pad_sequences
 from keras.preprocessing.text import Tokenizer
 import numpy as np
 from keras.utils import to_categorical
+from tw_sklearn.my_nltk import tokenize_only
 
+import json
 import tw_word2vec.word2vec as tw_w2v
 
 MAX_NB_WORDS = 20000
@@ -43,8 +45,11 @@ embedding_layer = Embedding(num_words,  # 词个数
 
 if not os.path.isfile("../data/posi_matrix.npy"):
     position_matrix = np.random.randn(100, 20)
-    np.save("../data/posi_matrix",position_matrix)
+    np.save("../data/posi_matrix", position_matrix)
 position_matrix = np.load("../data/posi_matrix.npy")
+keyword = {}
+with open("../data/tf_idf.txt",'r') as load_f:
+    keyword = json.load(load_f)
 
 def get_xy(filepath, percent=1):
     # 读取数据
@@ -53,10 +58,12 @@ def get_xy(filepath, percent=1):
                         names=["type", "e1", "e2", "doc"]
                         )
 
+    add_keyword(train)
     texts = train['doc'].values.tolist()
     sequences = tokenizer.texts_to_sequences(texts)
     data = pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)  # 限制每篇文章的长度——可作为输入了
     data_position = add_position(train, data)
+    data[:0:10] = train["keyword"][0:10]
     y = train['type'].map(lambda x: types.index(x.replace("\n", '')))
     y = to_categorical(np.asarray(y))  # 转化label
     if (percent == 1):
@@ -81,6 +88,19 @@ def get_xy(filepath, percent=1):
     print('Shape of label tensor:', y_train.shape)
     return (x_train, x_train_position, y_train, x_test, x_test_position, y_test)
 
+def add_keyword(source):
+    indices = np.arange(source.shape[0])
+    result = list()
+    for i in indices:
+        text = source.loc[i, ['doc']].values[0]
+        temp_keyword = ""
+        type = source.loc[i, ['type']].values[0]
+        for word in tokenize_only(text):
+            if word in keyword[type].keys():
+                temp_keyword += " "+ word
+        result.append(tokenizer.texts_to_sequences(temp_keyword))
+    source["keyword"] =pd.Series(result,index=indices)
+    return source
 
 def add_position(source, data=None):
     indices = np.arange(source.shape[0])
@@ -90,7 +110,7 @@ def add_position(source, data=None):
         e1_position = source.loc[i, ['e1']].values[0]
         e2_position = source.loc[i, ['e2']].values[0]
         tokens = []
-        from tw_sklearn.my_nltk import tokenize_only
+
         if data is None:
             tokens = tokenize_only(text)
         else:
