@@ -81,8 +81,8 @@ keras TensorFlow Backend
 ```
 {
 	"sentences":[
-		"\<per>你\</per>准备坐\<instrument>船\</instrument>去那边",
-		"\<food>粉丝\</food>由\<food>马铃薯\</food>加工"
+		"<per>你</per>准备坐<instrument>船</instrument>去那边",
+		"<food>粉丝</food>由<food>马铃薯</food>加工"
 		]
 }
 ```
