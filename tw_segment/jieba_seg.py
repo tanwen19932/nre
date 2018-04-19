@@ -58,9 +58,13 @@ def segListWithNerTag(sentences:list):
     pairs_all = []
     position_all = []
     for sentence in sentences:
-        pairs,position_pair = segWithNerTag(sentence)
-        pairs_all.append(pairs)
-        position_all.append(position_pair)
+        try:
+            pairs,position_pair = segWithNerTag(sentence)
+            pairs_all.append(pairs)
+            position_all.append(position_pair)
+        except:
+            print(sentence)
+            pass
     return pairs_all,position_all
 
 

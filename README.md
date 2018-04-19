@@ -3,12 +3,12 @@ Neural Relation Extraction (NRE) with wechat API
 
 SemEval2010_task8 relation extraction
 
-use cnn
+use cnn,lstm
 keras TensorFlow Backend
 
 # 1. 关系中文
-中文识别直接采用keras_input_zh脚本执行
-
+中文识别直接采用tw_word2vec.output.py脚本执行
+采用LSTM模型和CNN模型两个版本
 ## 关系类型：
 
 >部分-整体(e1,e2)  
