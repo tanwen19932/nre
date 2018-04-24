@@ -65,7 +65,7 @@ with open("../data/tf_idf.txt", 'r') as load_f:
     keyword = json.load(load_f)
 
 
-class SentencesVector():
+class SentencesVector(object):
     sentence_vec = None
     position_vec = None
     pos_vec = None
@@ -94,21 +94,26 @@ class SentencesVector():
             self.position_vec[i:] = sentence_posi_maxtrix
         # 获取词性向量
         # from tw_word2vec.cnn_input_zh import all_pos_list
-        all_pos_set = set(all_pos_list)
-        for pairs in pairs_all:
-            for pair in pairs:
-                if not all_pos_set.__contains__(pair.flag):
-                    all_pos_list.append(pair.flag)
-                    all_pos_set.add(pair.flag)
-        with open("../data/pos_list.txt", "w") as f:
-            for pos in all_pos_list:
-                f.write(pos)
-                f.write("\n")
+        # all_pos_set = set(all_pos_list)
+        # for pairs in pairs_all:
+        #     for pair in pairs:
+        #         if not all_pos_set.__contains__(pair.flag):
+        #             all_pos_list.append(pair.flag)
+        #             all_pos_set.add(pair.flag)
+        # with open("../data/pos_list.txt", "w") as f:
+        #     for pos in all_pos_list:
+        #         f.write(pos)
+        #         f.write("\n")
 
         all_pos = list(all_pos_list)
         self.pos_vec = np.zeros((len(pairs_all), MAX_SEQUENCE_LENGTH, len(all_pos)))
         for i in range(len(pairs_all)):
-            pos_y = list(map(lambda x: all_pos.index(x.flag), pairs_all[i]))
+            def getPosIndex(x):
+                if all_pos.__contains__(x.flag):
+                    return all_pos.index(x.flag)
+                else:
+                    return 0
+            pos_y = list(map(lambda x:getPosIndex(x), pairs_all[i]))
             pos_matrix = to_categorical(pos_y, len(all_pos))
             pos_matrix_all = np.zeros((MAX_SEQUENCE_LENGTH, len(all_pos)))
             pos_matrix_all[-len(pos_matrix):] = pos_matrix
