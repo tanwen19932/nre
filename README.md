@@ -3,12 +3,23 @@ Neural Relation Extraction (NRE) with wechat API
 
 SemEval2010_task8 relation extraction
 
-use cnn,lstm
+use cnn,lstm,biLstm
 keras TensorFlow Backend
 
 # 1. 关系中文
-中文识别直接采用tw_word2vec.output.py脚本执行
-采用LSTM模型和CNN模型两个版本
+中文识别直接采用tw_word2vec/output_zh.py脚本执行
+采用BiLSTM,LSTM模型和CNN模型两个版本
+代码中直接修改  
+outputer=OutPuter(LstmTrainer())
+outputer=OutPuter(BiLstmTrainer())
+outputer=OutPuter(CnnTrainer())
+修改具体的分类模型 如果模型不存在会先训练
+中文向量  news_12g_baidubaike_20g_novel_90g_embedding_64.bin
+英文向量  GoogleNews-vectors-negative300.bin
+
+整体特征为:词向量+词与实体的位置向量+词的词性作为特征输入
+请自行百度搜索相关下载.
+
 ## 关系类型：
 
 >部分-整体(e1,e2)  
