@@ -60,7 +60,6 @@ if not os.path.isfile("../data/posi_matrix.npy"):
 position_matrix = np.load("../data/posi_matrix.npy")
 keyword = {}
 
-
 with open("../data/tf_idf.txt", 'r') as load_f:
     keyword = json.load(load_f)
 
@@ -71,10 +70,17 @@ class SentencesVector(object):
     pos_vec = None
     classifications_vec = None
 
-    def __init__(self, sentences, classifications=None) -> None:
-        if not isinstance(sentences, list):
-            raise Exception("传入句子list")
-        pairs_all,position_all = jieba_seg.segListWithNerTag(sentences)
+    def __init__(self, sentences=None, pairs_all=None, position_all=None, classifications=None) -> None:
+        if sentences == None:
+            if pairs_all == None or position_all == None:
+                raise Exception("传入句子list 或者 pairs_all,position_all")
+        else:
+            if not isinstance(sentences, list):
+                raise Exception("传入句子list")
+            pairs_all, position_all = jieba_seg.segListWithNerTag(sentences)
+        if len(pairs_all) > MAX_SEQUENCE_LENGTH:
+            pairs_all = pairs_all[-MAX_SEQUENCE_LENGTH:]
+            position_all = position_all[-MAX_SEQUENCE_LENGTH:]
         # 获取句子向量
         texts = list(map(lambda pair: reduce(lambda x, y: x + y, map(lambda x: x.word + " ", pair)), pairs_all))
         sequences = tokenizer.texts_to_sequences(texts)
@@ -113,7 +119,8 @@ class SentencesVector(object):
                     return all_pos.index(x.flag)
                 else:
                     return 0
-            pos_y = list(map(lambda x:getPosIndex(x), pairs_all[i]))
+
+            pos_y = list(map(lambda x: getPosIndex(x), pairs_all[i]))
             pos_matrix = to_categorical(pos_y, len(all_pos))
             pos_matrix_all = np.zeros((MAX_SEQUENCE_LENGTH, len(all_pos)))
             pos_matrix_all[-len(pos_matrix):] = pos_matrix
@@ -121,6 +128,7 @@ class SentencesVector(object):
         if classifications != None:
             classifications_y = list(map(lambda x: types.index(x), classifications))
             self.classifications_vec = to_categorical(classifications_y, len(types))
+
 
 def getSentenceVectorFromFile(file):
     file_types = []

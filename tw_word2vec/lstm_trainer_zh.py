@@ -19,13 +19,15 @@ class LstmTrainer():
     def __init__(self) -> None:
         if not os.path.exists(self.model_path):
             vector = getSentenceVectorFromFile("../data/train_zh.txt")
-            print(vector.sentence_vec)
-            print(vector.position_vec)
-            print(vector.pos_vec)
-            print(vector.classifications_vec)
+            # print(vector.sentence_vec)
+            # print(vector.position_vec)
+            # print(vector.pos_vec)
+            # print(vector.classifications_vec)
             self.model = self.train(vector)
             self.model.save(self.model_path)
-        self.model = load_model(self.model_path)
+        else:
+            self.model = load_model(self.model_path)
+            print(self.model.summary())
 
     model_path = "../data/model/re_zh_model.lstm.hdf5"
 

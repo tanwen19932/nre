@@ -29,13 +29,24 @@ class OutPuter(object):
         return relations
 
     def getDescription(self,predict_texts: list):
-        from tw_segment.jieba_seg import segListWithNerTag
-        pairs_all, position_all = segListWithNerTag(predict_texts)
-
+        from tw_segment.jieba_seg import segWithNerTag
+        pairs_all = []
+        position_all = []
+        sentences = []
+        for sentence in predict_texts:
+            try:
+                pairs, position_pair = segWithNerTag(sentence)
+                if len(pairs) <= 100:
+                    pairs_all.append(pairs)
+                    position_all.append(position_pair)
+                    sentences.append(sentence)
+            except:
+                print(sentence)
+                pass
         from tw_word2vec.cnn_input_zh import SentencesVector
-        predict_types = self.trainer.predict(SentencesVector(predict_texts))
+        predict_types = self.trainer.predict(SentencesVector(pairs_all=pairs_all,position_all=position_all))
         from tw_relation.relations import getRelationDetail
-        predict_details = getRelationDetail(predict_texts)
+        predict_details = getRelationDetail(sentences)
         result = []
         for i in range(len(position_all)):
             entity1 = pairs_all[i][position_all[i][0]]
@@ -47,7 +58,7 @@ class OutPuter(object):
             obj["e2_type"] = entity2.flag
             obj["predict_type"] = predict_types[i]
             obj["relation_detail"] = predict_details[i]
-            obj["sentence"] = predict_texts[i]
+            obj["sentence"] = sentences[i]
             result.append(obj)
         return result
 

@@ -41,7 +41,7 @@ model.add(LSTM(32, input_shape=(X.shape[1], X.shape[2])))
 model.add(Dense(y.shape[1], activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 print(model.summary())
-model.fit(X, y, nb_epoch=500, batch_size=1, verbose=2)
+model.fit(X, y, nb_epoch=100, batch_size=1, verbose=2)
 # summarize performance of the model
 scores = model.evaluate(X, y, verbose=0)
 print("Model Accuracy: %.2f%%" % (scores[1]*100))
