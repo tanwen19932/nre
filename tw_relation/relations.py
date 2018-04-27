@@ -148,6 +148,8 @@ def getRelationDetail(sentence_list):
         result = ''
         for word in words:
             result += word + " "
+            if len(result)>5:
+                break
         relations_detail.append(result.strip())
     return relations_detail
 

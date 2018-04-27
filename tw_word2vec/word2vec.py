@@ -59,9 +59,9 @@ def saveZh(filepath):
     with open("../data/rawZhData/news_raw_wc2017-12-19.txt", "r") as f:
         for line in f.readlines():
             line = line.strip()
-            all_word_with_pos.extend( jieba_seg.segWithNER(line))
+            all_word_with_pos.extend( jieba_seg.segOnly(line))
     need_word2vec = {}
-    tokenizer = text.Tokenizer(num_words=100)
+    tokenizer = text.Tokenizer(num_words=50000)
     tokenizer.fit_on_texts(list(map(lambda x:x.word,all_word_with_pos)))
     word_vec = gensim.models.KeyedVectors.load_word2vec_format(
         os.path.join(os.path.dirname(__file__), '../data/word2vec/news_12g_baidubaike_20g_novel_90g_embedding_64.bin'), binary=True)
@@ -75,6 +75,18 @@ def saveZh(filepath):
     f = open(filepath, 'wb')
     f.write(pickle.dumps(need_word2vec))
     f.close()
+
+
+
+def getAllWord2Vec(filepath):
+    # 对文本中的词进行统计计数，生成文档词典，以支持基于词典位序生成文本的向量表示，超过max_features的单词被丢掉
+    # 使用一系列文档来生成token词典，texts为list类，每个元素为一个文档
+    word_vec = gensim.models.KeyedVectors.load_word2vec_format(
+        os.path.join(os.path.dirname(__file__), '../data/word2vec/news_12g_baidubaike_20g_novel_90g_embedding_64.bin'), binary=True)
+    return word_vec
+
+
+
 
 if __name__ == '__main__':
     # saveEn("../data/needed_word2vec.bin")
