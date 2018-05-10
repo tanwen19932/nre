@@ -45,8 +45,8 @@ class OutPuter(object):
                 pass
         from tw_word2vec.cnn_input_zh import SentencesVector
         predict_types = self.trainer.predict(SentencesVector(pairs_all=pairs_all,position_all=position_all))
-        from tw_relation.relations import getRelationDetail
-        predict_details = getRelationDetail(sentences)
+        from tw_relation.relations import relation_admin
+        predict_details = relation_admin.getRelationDetail(pairs_all,position_all,predict_types)
         result = []
         for i in range(len(position_all)):
             entity1 = pairs_all[i][position_all[i][0]]

@@ -8,91 +8,119 @@ from pprint import pprint
 
 from tw_segment.jieba_seg import *
 
-relations_en = ['Component-Whole(e1,e2)',
-                'Component-Whole(e2,e1)',
-                'Content-Container(e1,e2)',
-                'Content-Container(e2,e1)',
-                'Product-Producer(e1,e2)',
-                'Product-Producer(e2,e1)',
-                'Instrument-Agency(e1,e2)',
-                'Instrument-Agency(e2,e1)',
-                'Entity-Destination(e1,e2)',
-                'Entity-Destination(e2,e1)',
-                'Entity-Origin(e1,e2)',
-                'Entity-Origin(e2,e1)',
-                'Cause-Effect(e1,e2)',
-                'Cause-Effect(e2,e1)',
-                'Member-Collection(e1,e2)',
-                'Member-Collection(e2,e1)',
-                'Message-Topic(e1,e2)',
-                'Message-Topic(e2,e1)',
-                'Other']
-relations_zh = ['部分-整体(e1,e2)',
-                '部分-整体(e2,e1)',
-                '内容-容器(e1,e2)',
-                '内容-容器(e2,e1)',
-                '产品-生产者(e1,e2)',
-                '产品-生产者(e2,e1)',
-                '成员-组织(e1,e2)',
-                '成员-组织(e2,e1)',
-                '实体-地区(e1,e2)',
-                '实体-地区(e2,e1)',
-                '人物-人物(e1,e2)',
-                '人物-人物(e2,e1)',
-                '工具-代理(e1,e2)',
-                '工具-代理(e2,e1)',
-                '起因-影响(e1,e2)',
-                '起因-影响(e2,e1)',
-                '消息-话题(e1,e2)',
-                '消息-话题(e2,e1)',
-                '同级',
-                '其他相关',
-                '无']
-relation_word_dic_zh = {}
+ZH_RELATION_PATH = "../data/relations_zh"
+EN_RELATION_PATH = "../data/relations_en"
 
 
-def getRelationWord(relation):
+def getFileLines(file_path):
     result = []
     try:
-        with open("../data/relation/" + relation + ".txt", "r") as f:
+        with open(file_path, "r") as f:
             for line in f.readlines():
-                result.append(line)
+                line = line.strip()
+                if (len(line) > 0):
+                    result.append(line)
     except:
         pass
     return result
 
 
-for relation_zh in relations_zh:
-    relation_word_dic_zh[relation_zh] = getRelationWord(relation_zh)
+def getRelationWord(relation):
+    file_path = "../data/relation/" + relation + ".txt"
+    return getFileLines(file_path)
+
+
+class RelationWordAdmin(object):
+    relations_en = []
+    relations_zh = []
+    relation_word_dic = {}
+
+    def __init__(self) -> None:
+        self.relations_zh = getFileLines(ZH_RELATION_PATH)
+        self.relations_en = getFileLines(EN_RELATION_PATH)
+        for relation in self.relations_zh:
+            self.relation_word_dic[relation] = getRelationWord(relation)
+        for relation in self.relations_en:
+            self.relation_word_dic[relation] = getRelationWord(relation)
+        # print(self.relation_word_dic)
+
+    def getRelationDetail(self, paris_all, position_all,predict_types):
+        detail = []
+        for i in range(len(position_all)):
+            pos = position_all[i]
+            predict_type = predict_types[i]
+            is_add = False
+            for pair in paris_all[i][pos[0]+1:pos[1]]:
+                if pair.word in self.relation_word_dic[predict_type]:
+                    detail.append(pair.word)
+                    is_add=True
+                    break
+            if not is_add:
+                detail.append("")
+        return detail
+
+relation_admin = RelationWordAdmin()
+
+
+
+def generateRelationWord(sentence_list: list) -> list:
+    # 进行hdp聚类 获取相关词
+    # 句法分析获取相关词
+    # 统计两者都出现的词 作为待选关系词典
+    # hdp
+    result_word = []
+    hdp_word = getRelationDetailByHDP(sentence_list)
+    parse_word = []
+    for word in getRelationDetailByParse(sentence_list):
+        for temp_word in word.split(" "):
+            parse_word.append(temp_word)
+    # print(hdp_word)
+    # print(parse_word)
+    for word_value in hdp_word:
+        if(parse_word.__contains__(word_value[0])):
+            result_word.append(word_value[0])
+    return result_word
+
+
 
 from pyhanlp import *
+def getRelationDetailByHDP(sentence_list):
+    # 聚类获取结果
+    corpus = []
+    pairs_all, position_all = segListWithNerTag(sentence_list)
+    words_list = []
+    for pairs in pairs_all:
+        word_list = []
+        for pair in pairs:
+            if pair.flag.__contains__("v") or pair.flag.__contains__("n"):
+                word_list.append(pair.word)
+        words_list.append(word_list)
+    # words_list = list(map(lambda pairs: map(lambda x: x.word, pairs), pairs_all))
+    from gensim import corpora
+    dictionary = corpora.Dictionary(words_list)
+    for words in words_list:
+        corpus.append(dictionary.doc2bow(words))
+    from gensim.models import HdpModel
+    hdp = HdpModel(corpus, dictionary)
+    a = hdp.print_topics()
+    words = {}
+    for topic in a:
+        word_details = str(topic[1]).split(" + ")
+        for  word_detail in word_details:
+            word = str(word_detail[word_detail.index("*") + 1:])
+            num = float(str(word_detail[:word_detail.index("*")]))
+            if not (words.__contains__(word)):
+                words[word] = num
+            else:
+                words[word] += num
+    words = sorted(words.items(), key=lambda d: d[1])
+    return words  # 后获取句法分析中的高频动词名词)
 
 
-def generateRelationWord():
-    # 首先进行读取文件 后进行hdp聚类
-    sentence_list = []
-    with open("../data/train_zh.txt", "r") as f:
-        for line in f.readlines():
-            sentence_list.append(line.split("|")[1].strip())
-    detail_relatino = getRelationDetail(sentence_list)
-    print(detail_relatino)
-
-
-def getRelationDetail(sentence_list):
+def getRelationDetailByParse(sentence_list):
+    # 从Hanlp获取包含两个实体最小生成树,将树中的所有词加入统计然后与RelationWord中的所有词进行同步取Top 可获取相关内容
     relations_detail = []
     pairs_all, position_all = segListWithNerTag(sentence_list)
-    # 聚类获取结果
-    # corpus = []
-    # words_list = list(map(lambda pairs: map(lambda x: x.word, pairs), pairs_all))
-    # from gensim import corpora
-    # dictionary = corpora.Dictionary(words_list)
-    # for words in words_list:
-    #     corpus.append(dictionary.doc2bow(words))
-    # from gensim.models import HdpModel
-    # hdp = HdpModel(corpus, dictionary)
-    # a = hdp.print_topics(num_topics=2, num_words=2)
-    # print(a)
-    ##后获取句法分析中的高频动词名词
     import jpype
     Term = jpype.JClass("com.hankcs.hanlp.seg.common.Term")
     Nature = AttachJVMWrapper("com.hankcs.hanlp.corpus.tag.Nature")
@@ -148,12 +176,35 @@ def getRelationDetail(sentence_list):
         result = ''
         for word in words:
             result += word + " "
-            if len(result)>5:
-                break
+            # if len(result)>5:
+            #     break
         relations_detail.append(result.strip())
     return relations_detail
 
+def saveRelationWord(relation,words):
+    result = []
+    try:
+        with open("../data/relation/" + relation + ".txt", "w") as f:
+            for word in words:
+                f.write(word+"\n")
+    except:
+        pass
+    return result
 
 if __name__ == '__main__':
     # pprint(relations_en)
-    generateRelationWord()
+    if relation_admin.relation_word_dic.__len__()==0:
+        class_corpus = {}
+        with open("../data/train_zh.txt", "r") as f:
+            for line in f.readlines():
+                line = line.strip()
+                classification = line.split("|")[0]
+                sentence = line.split("|")[1]
+                if not class_corpus.__contains__(classification):
+                    class_corpus[classification] = []
+                if (len(sentence) > 0):
+                    class_corpus[classification].append(sentence)
+        for classification in class_corpus.keys():
+            result =  generateRelationWord(class_corpus[classification])
+            print(classification,result)
+            saveRelationWord(classification,result)

@@ -22,9 +22,9 @@ EMBEDDING_DIM = 64
 MAX_SEQUENCE_LENGTH = 100
 
 default_model: dict = tw_w2v.get_word2vec_dic("../data/needed_zh_word2vec.bin")
-from tw_relation.relations import relations_zh, relation_word_dic_zh, getRelationDetail
+from tw_relation.relations import relation_admin
 
-types = relations_zh
+types = relation_admin.relations_zh
 print("类型个数", len(types))
 tokenizer = Tokenizer(num_words=MAX_NB_WORDS)  # 传入我们词向量的字典
 tokenizer.fit_on_texts(default_model.keys())  # 传入我们的训练数据，得到训练数据中出现的词的字典
