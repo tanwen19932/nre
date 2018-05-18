@@ -9,11 +9,8 @@ import keras
 from keras import optimizers
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import Dense, Input, Bidirectional
-from keras.layers import regularizers, LSTM
+from keras.layers import regularizers
 from keras.models import Model, load_model
-
-from tw_keras.AttentionLSTM import AttentionLSTMWrapper
-from tw_word2vec.cnn_input_zh import *
 
 
 class BiLstmAttentionTrainer():

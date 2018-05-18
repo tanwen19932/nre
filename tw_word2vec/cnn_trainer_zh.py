@@ -5,50 +5,38 @@
 # @Date  : 2018/3/20
 # @Desc  :
 
-import os
-
 import keras
 from keras import optimizers
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import Dense, Input, Flatten
 from keras.layers import MaxPooling1D, Dropout, regularizers, Conv1D
-from keras.models import Model, load_model
+from keras.models import Model
 
-from tw_word2vec.cnn_input_zh import *
+from tw_word2vec.inputer import SentencesVector
 
 
 class CnnTrainer():
-    def __init__(self) -> None:
-        if not os.path.exists(self.model_path):
-            vector = getSentenceVectorFromFile("../data/train_zh.txt")
-            print(vector.sentence_vec)
-            print(vector.position_vec)
-            print(vector.pos_vec)
-            print(vector.classifications_vec)
-            self.model = self.train(vector)
-            self.model.save(self.model_path)
-        self.model = load_model(self.model_path)
-
-    model_path = "../data/model/re_zh_model.cnn.hdf5"
-
-    def train(self,sentences_vector: SentencesVector):
-        sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32', name="sequence_input")  # 100*1最多100个词组成输入
-        embedded_sequences = embedding_layer(sequence_input)  # 句子转为向量矩阵 训练集大小*100*64维
+    def train(self, sentences_vector: SentencesVector):
+        inputer = sentences_vector.inputer
+        config = inputer.config
+        sequence_input = Input(shape=(config.MAX_SEQUENCE_LENGTH,), dtype='int32',
+                               name="sequence_input")  # 100*1最多100个词组成输入
+        embedded_sequences = inputer.getWordEmbedding()(sequence_input)  # 句子转为向量矩阵 训练集大小*100*64维
         # model test2
-        posi_input = Input(shape=(MAX_SEQUENCE_LENGTH, 40), name="posi_input")
-        pos_input = Input(shape=(MAX_SEQUENCE_LENGTH, len(all_pos_list)), name="pos_input")
+        posi_input = Input(shape=(config.MAX_SEQUENCE_LENGTH, sentences_vector.position_vec.shape[2]), name="posi_input")
+        pos_input = Input(shape=(config.MAX_SEQUENCE_LENGTH,sentences_vector.pos_vec.shape[2]), name="pos_input")
         embedded_sequences = keras.layers.concatenate([embedded_sequences, posi_input, pos_input])
         # conv1d_1s = MultiConv1D(filters=[90, 80, 70, 50, 30, 10], kernel_size=[3, 4, 5], activation='relu')
         # conv1d_1s = MultiConv1D(filters=[10], kernel_size=[3], activation='relu')
         best_model = None
-        c1 =  Conv1D(filters=10, kernel_size=3,
-                         activation='relu')(embedded_sequences)
+        c1 = Conv1D(filters=10, kernel_size=3,
+                    activation='relu')(embedded_sequences)
         c1 = MaxPooling1D(pool_size=3)(c1)
         c1 = Dropout(rate=0.7)(c1)
         c1 = Flatten()(c1)
         # c1 = Dense(128, activation='relu')(c1)  # 128全连接
         # c1 = Dense(64, activation='relu')(c1)  # 64全连接
-        preds = Dense(len(types), activation='softmax', kernel_regularizer=regularizers.l2(0.01),
+        preds = Dense(len(inputer.types), activation='softmax', kernel_regularizer=regularizers.l2(0.01),
                       activity_regularizer=regularizers.l1(0.001))(c1)  # softmax分类
         model = Model(inputs=[sequence_input, posi_input, pos_input], outputs=preds)
         print(model.summary())
@@ -61,7 +49,8 @@ class CnnTrainer():
 
         # ModelCheckpoint回调函数将在每个epoch后保存模型到filepath，当save_best_only=True保存验证集误差最小的参数
 
-        checkpoint = ModelCheckpoint(self.model_path, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+        checkpoint = ModelCheckpoint(config.model_file_path, monitor='val_loss', verbose=1, save_best_only=True,
+                                     mode='min')
         # 当监测值不再改善时，该回调函数将中止训练
         early = EarlyStopping(monitor="val_loss", mode="min", patience=50)
 
@@ -71,26 +60,9 @@ class CnnTrainer():
         model.fit({'sequence_input': sentences_vector.sentence_vec, 'posi_input': sentences_vector.position_vec,
                    'pos_input': sentences_vector.pos_vec},
                   sentences_vector.classifications_vec,
-                  batch_size=128,
-                  epochs=500,
+                  batch_size=sentences_vector.sentence_vec.shape[1],
+                  epochs=100,
                   # validation_split=0.2,
                   # validation_data=({'sequence_input': x_test, 'posi_input': x_test_posi}, y_test),
                   callbacks=callbacks_list)
         return model
-
-
-
-
-
-    def predict(self,sentence_vector: SentencesVector):
-        id = self.model.predict({'sequence_input': sentence_vector.sentence_vec, 'posi_input': sentence_vector.position_vec,
-                            'pos_input': sentence_vector.pos_vec})
-        output = []
-        for row in id:
-            max_index = row.argsort()[-1]
-            # raw_type = types[y_test[i].argsort()[-1]]
-            for i in range(len(row)):
-                print(types[i],row[i])
-            predict_type = types[max_index]
-            output.append(predict_type)
-        return output

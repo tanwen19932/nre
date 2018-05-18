@@ -4,13 +4,13 @@
 # @Author: TW
 # @Date  : 2018/3/20
 # @Desc  :
-from tw_word2vec.bilstm_attention_trainer_zh import BiLstmAttentionTrainer
-from tw_word2vec.bilstm_trainer_zh import BiLstmTrainer
+from tw_word2vec.inputer import SentencesVector
 from tw_word2vec.lstm_trainer_zh import LstmTrainer
 
 
-class OutPuter(object):
+class Outputer(object):
     def __init__(self, trainer) -> None:
+        self.inputer = trainer.inputer
         if not hasattr(trainer, "train"):
             raise Exception("传入文件不包含 train 方法")
         self.trainer = trainer
@@ -43,10 +43,8 @@ class OutPuter(object):
             except:
                 print(sentence)
                 pass
-        from tw_word2vec.cnn_input_zh import SentencesVector
-        predict_types = self.trainer.predict(SentencesVector(pairs_all=pairs_all,position_all=position_all))
-        from tw_relation.relations import relation_admin
-        predict_details = relation_admin.getRelationDetail(pairs_all,position_all,predict_types)
+        predict_types = self.trainer.predict(SentencesVector(self.inputer,pairs_all=pairs_all,position_all=position_all))
+        predict_details = self.inputer.relationWordAdmin.getRelationDetail(pairs_all,position_all,predict_types)
         result = []
         for i in range(len(position_all)):
             entity1 = pairs_all[i][position_all[i][0]]
@@ -67,7 +65,7 @@ if __name__ == '__main__':
     predict_texts = ["<per>你</per>准备坐<instrument>船</instrument>去那边",
                      "<food>粉丝</food>由<food>马铃薯</food>加工"]
     # print(getSentenceRelation(predict_texts,predict_types))
-    outputer = OutPuter(LstmTrainer())
+    outputer = Outputer(LstmTrainer())
     import json
     print(json.dumps(outputer.getDescription(predict_texts), ensure_ascii=False))
 

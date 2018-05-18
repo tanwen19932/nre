@@ -62,8 +62,8 @@ def segListWithNerTag(sentences:list):
             pairs,position_pair = segWithNerTag(sentence)
             pairs_all.append(pairs)
             position_all.append(position_pair)
-        except:
-            print(sentence)
+        except Exception as ex:
+            print("[句子错误!]-",sentence)
             pass
     return pairs_all,position_all
 

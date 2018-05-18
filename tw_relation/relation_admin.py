@@ -31,16 +31,10 @@ def getRelationWord(relation):
 
 
 class RelationWordAdmin(object):
-    relations_en = []
-    relations_zh = []
-    relation_word_dic = {}
-
-    def __init__(self) -> None:
-        self.relations_zh = getFileLines(ZH_RELATION_PATH)
-        self.relations_en = getFileLines(EN_RELATION_PATH)
-        for relation in self.relations_zh:
-            self.relation_word_dic[relation] = getRelationWord(relation)
-        for relation in self.relations_en:
+    def __init__(self,relation_path) -> None:
+        self.relations = getFileLines(relation_path)
+        self.relation_word_dic = {}
+        for relation in self.relations:
             self.relation_word_dic[relation] = getRelationWord(relation)
         # print(self.relation_word_dic)
 
@@ -59,7 +53,9 @@ class RelationWordAdmin(object):
                 detail.append("")
         return detail
 
-relation_admin = RelationWordAdmin()
+relation_admin_zh = RelationWordAdmin(ZH_RELATION_PATH)
+relation_admin_en = RelationWordAdmin(EN_RELATION_PATH)
+
 
 
 

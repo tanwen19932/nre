@@ -6,13 +6,13 @@ from wsgiref import simple_server
 import json
 
 from tw_word2vec.lstm_trainer_zh import LstmTrainer
-from tw_word2vec.output_zh import OutPuter
+from tw_word2vec.output_zh import Outputer
 
 
 class ReWebService(object):
     outputer = None
     def __init__(self):
-        self.outputer = OutPuter(LstmTrainer())
+        self.outputer = Outputer(LstmTrainer())
 
     def on_get(self, req, resp):
         self._handle(req, resp)
@@ -49,5 +49,5 @@ if __name__ == '__main__':
     api = falcon.API()
     captcha = ReWebService()
     api.add_route('/re', captcha)
-    httpd = simple_server.make_server('192.168.0.8', 8005, api)
+    httpd = simple_server.make_server('192.168.0.8', 65502, api)
     httpd.serve_forever()
