@@ -215,3 +215,18 @@ class SentencesVector(object):
         if classifications_all != None:
             classifications_y = list(map(lambda x: inputer.types.index(x), classifications_all))
             self.classifications_vec = to_categorical(classifications_y, len(inputer.types))
+
+    def prop2index(self, prop):
+        output = []
+        for row in prop:
+            max_index = row.argsort()[-1]
+            # raw_type = self.inputer.types[y_test[i].argsort()[-1]]
+            # for i in range(len(row)):
+            #     print(self.inputer.types[i], row[i])
+
+            predict_type = self.inputer.types[max_index]
+            if row[max_index]<0.5:
+                print("最大概率为",row[max_index])
+                predict_type = "无"
+            output.append(predict_type)
+        return output

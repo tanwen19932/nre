@@ -13,6 +13,7 @@ from keras.layers import regularizers, LSTM
 from keras.models import Model
 
 from tw_word2vec.inputer import SentencesVector
+from tw_word2vec.metric import Metrics
 
 
 class LstmTrainer():
@@ -41,13 +42,12 @@ class LstmTrainer():
 
         # ModelCheckpoint回调函数将在每个epoch后保存模型到filepath，当save_best_only=True保存验证集误差最小的参数
 
-        checkpoint = ModelCheckpoint(config.model_file_path, monitor='val_loss', verbose=1, save_best_only=True,
-                                     mode='min')
+        checkpoint = ModelCheckpoint(config.model_file_path, monitor='val_loss', verbose=1, mode='min')
         # 当监测值不再改善时，该回调函数将中止训练
         early = EarlyStopping(monitor="val_loss", mode="min", patience=50)
-
+        metrics = Metrics()
         # 开始训练
-        callbacks_list = [checkpoint, early]  # early
+        callbacks_list = [checkpoint, early,metrics]  # early
         # And trained it via:
         model.fit({'sequence_input': sentences_vector.sentence_vec, 'posi_input': sentences_vector.position_vec,
                    'pos_input': sentences_vector.pos_vec},

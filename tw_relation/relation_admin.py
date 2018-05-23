@@ -43,6 +43,9 @@ class RelationWordAdmin(object):
         for i in range(len(position_all)):
             pos = position_all[i]
             predict_type = predict_types[i]
+            if predict_type not in self.relations:
+                detail.append("")
+                continue
             is_add = False
             for pair in paris_all[i][pos[0]+1:pos[1]]:
                 if pair.word in self.relation_word_dic[predict_type]:

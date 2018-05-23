@@ -70,16 +70,3 @@ class BiLstmAttentionTrainer():
                   # validation_data=({'sequence_input': x_test, 'posi_input': x_test_posi}, y_test),
                   callbacks=callbacks_list)
         return model
-
-    def predict(self,sentence_vector: SentencesVector):
-        id = self.model.predict({'sequence_input': sentence_vector.sentence_vec, 'posi_input': sentence_vector.position_vec,
-                            'pos_input': sentence_vector.pos_vec})
-        output = []
-        for row in id:
-            max_index = row.argsort()[-1]
-            # raw_type = types[y_test[i].argsort()[-1]]
-            for i in range(len(row)):
-                print(types[i],row[i])
-            predict_type = types[max_index]
-            output.append(predict_type)
-        return output
