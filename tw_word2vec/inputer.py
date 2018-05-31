@@ -13,13 +13,14 @@ from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
 
 import tw_word2vec.word2vec as tw_w2v
-from tw_relation.relation_admin import RelationWordAdmin
+from tw_relation.relation_admin import RelationWordAdmin, JieBaTokenizer
 from tw_segment import jieba_seg
 from keras.preprocessing.text import Tokenizer
 
 
 class Configuration(object):
     def __init__(self,
+                 tokenizer=JieBaTokenizer(),
                  MAX_NB_WORDS=50000,
                  EMBEDDING_DIM=64,
                  MAX_SEQUENCE_LENGTH=100,
@@ -30,6 +31,7 @@ class Configuration(object):
                  corpus_file_path="../data/train_zh.txt",
                  model_file_path="../data/model/re_zh_model.lstm.hdf5",
                  ) -> None:
+        self.tokenizer = tokenizer
         self.MAX_NB_WORDS = MAX_NB_WORDS
         self.EMBEDDING_DIM = EMBEDDING_DIM
         self.MAX_SEQUENCE_LENGTH = MAX_SEQUENCE_LENGTH

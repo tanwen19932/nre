@@ -77,6 +77,48 @@ def getCorpus(from_file,to_file):
                     elif word.__contains__('<e2>'):
                         dic["e2"] = str(word_index)
                     word_index+=1
+                dic["sentence"] = sentence.replace("<e1>", "").replace("<e2>", "").replace("</e1>", "").replace("</e2>","")[1:-1]
+                state = 1
+            elif state == 1:
+                dic["type"] = line
+                state = 2
+            elif state == 2:
+                state = 3
+            elif state == 3:
+                state = 0
+                types.add(dic["type"])
+                save_file.write(dic["type"])
+                save_file.write("|")
+                save_file.write(dic["e1"])
+                save_file.write("|")
+                save_file.write(dic["e2"])
+                save_file.write("|")
+                save_file.write(dic["sentence"])
+                save_file.write("\n")
+    print(types)
+    save_file.close()
+
+
+def getCorpusWithOutPosi(from_file,to_file):
+    dic = {}
+    types = set()
+    save_file = open(to_file, "w")
+    with open(from_file, 'r',
+              encoding='utf-8') as file:
+        lines = file.readlines()
+        state = 0
+        for line in lines:
+            line = line.strip()
+            if state == 0:
+                dic["index"] = line[0:line.find("\t")]
+                sentence = line[line.find("\t") + 1:]
+                word_index = 0
+                for word in sentence.split(" "):
+                    if word.__contains__('<e1>'):
+                        dic["e1"] = str(word_index)
+                    elif word.__contains__('<e2>'):
+                        dic["e2"] = str(word_index)
+                    word_index+=1
 
                 dic["sentence"] = sentence.replace("<e1>", "").replace("<e2>", "").replace("</e1>", "").replace("</e2>",
                                                                                                                 "")[
@@ -100,6 +142,7 @@ def getCorpus(from_file,to_file):
                 save_file.write("\n")
     print(types)
     save_file.close()
+
 
 if __name__ == '__main__':
     train_from_file = "../data/SemEval2010_task8_all_data/SemEval2010_task8_training/TRAIN_FILE.TXT"
