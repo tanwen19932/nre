@@ -11,6 +11,7 @@ from tw_segment.jieba_seg import *
 ZH_RELATION_PATH = "../data/relations_zh"
 EN_RELATION_PATH = "../data/relations_en"
 
+segmentor = JieBaTokenizer()
 
 def getFileLines(file_path):
     result = []
@@ -86,7 +87,7 @@ from pyhanlp import *
 def getRelationDetailByHDP(sentence_list):
     # 聚类获取结果
     corpus = []
-    pairs_all, position_all = segListWithNerTag(sentence_list)
+    pairs_all, position_all = segmentor.segListWithNerTag(sentence_list)
     words_list = []
     for pairs in pairs_all:
         word_list = []
@@ -119,7 +120,7 @@ def getRelationDetailByHDP(sentence_list):
 def getRelationDetailByParse(sentence_list):
     # 从Hanlp获取包含两个实体最小生成树,将树中的所有词加入统计然后与RelationWord中的所有词进行同步取Top 可获取相关内容
     relations_detail = []
-    pairs_all, position_all = segListWithNerTag(sentence_list)
+    pairs_all, position_all = segmentor.segListWithNerTag(sentence_list)
     import jpype
     Term = jpype.JClass("com.hankcs.hanlp.seg.common.Term")
     Nature = AttachJVMWrapper("com.hankcs.hanlp.corpus.tag.Nature")
@@ -192,6 +193,8 @@ def saveRelationWord(relation,words):
 
 if __name__ == '__main__':
     # pprint(relations_en)
+    relation_admin = relation_admin_zh
+
     if relation_admin.relation_word_dic.__len__()==0:
         class_corpus = {}
         with open("../data/train_zh.txt", "r") as f:
