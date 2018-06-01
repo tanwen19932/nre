@@ -29,13 +29,12 @@ class Outputer(object):
         return relations
 
     def getDescription(self,predict_texts: list):
-        from tw_segment.jieba_seg import segWithNerTag
         pairs_all = []
         position_all = []
         sentences = []
         for sentence in predict_texts:
             try:
-                pairs, position_pair = segWithNerTag(sentence)
+                pairs, position_pair = self.inputer.word_segmentor.segWithNerTag(sentence)
                 if len(pairs) <= 100:
                     pairs_all.append(pairs)
                     position_all.append(position_pair)
@@ -60,13 +59,3 @@ class Outputer(object):
             result.append(obj)
         return result
 
-
-if __name__ == '__main__':
-    predict_texts = ["<per>你</per>准备坐<instrument>船</instrument>去那边",
-                     "<food>粉丝</food>由<food>马铃薯</food>加工"]
-    # print(getSentenceRelation(predict_texts,predict_types))
-    outputer = Outputer(LstmTrainer())
-    import json
-    print(json.dumps(outputer.getDescription(predict_texts), ensure_ascii=False))
-
-    # get_sentence_vec("<per>你</per>这<per>招<per>打得很不错")

@@ -12,6 +12,7 @@ from keras.layers import Dense, Input, Flatten
 from keras.layers import MaxPooling1D, Dropout, regularizers, Conv1D
 from keras.models import Model
 
+from tw_segment.en_seg import EnSegmentor
 from tw_word2vec.bilstm_trainer_zh import BiLstmTrainer
 from tw_word2vec.inputer import SentencesVector, Configuration, Inputer
 from tw_word2vec.outputer import Outputer
@@ -69,18 +70,20 @@ class CnnTrainerEn():
 
 if __name__ == '__main__':
     config = Configuration(
+        word_segmentor=EnSegmentor(),
+        EMBEDDING_DIM=128,
         position_matrix_file_path="../data/posi_matrix.npy",
         word2vec_file_path="../data/needed_word2vec.bin",
         POS_list_file_path="../data/pos_list.txt",
         types_file_path="../data/relations_en.txt",
-        corpus_file_path="../data/train.txt",
+        corpus_file_path="../data/train_en.txt",
         model_file_path="../data/model/re_sem_eval_en_model.cnn.hdf5",
     )
     inputer = Inputer(config)
     trainer = Trainer(inputer, CnnTrainerEn())
     outputer = Outputer(trainer)
-    predict_texts = ["<loc>美国</loc>目前共有2级11艘航空母舰，包括企业级核动力航母1艘，尼米兹级核动力航母10<loc>艘，</loc>全部采用核动力发动机",
-                     "<loc>美国</loc>经过多年航空母舰的发<loc>展，</loc>一直以来都是全球拥有最多、排水量和体积最大、舰载机搭载数量最多、作战效率最强大、而且全部使用核动力航空母舰的国家"]
+    predict_texts = [" <e1>level</e1> of experience has already been mentioned in the previous <e2>chapter</e2>.",
+                     " <e1>level</e1> of experience has already been mentioned in the previous <e2>chapter</e2>."]
     import json
 
     print(json.dumps(outputer.getDescription(predict_texts), ensure_ascii=False))

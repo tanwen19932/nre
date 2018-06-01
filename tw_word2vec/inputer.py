@@ -14,13 +14,12 @@ from keras.utils import to_categorical
 
 import tw_word2vec.word2vec as tw_w2v
 from tw_relation.relation_admin import RelationWordAdmin, JieBaTokenizer
-from tw_segment import jieba_seg
 from keras.preprocessing.text import Tokenizer
 
 
 class Configuration(object):
     def __init__(self,
-                 tokenizer=JieBaTokenizer(),
+                 word_segmentor=JieBaTokenizer(),
                  MAX_NB_WORDS=50000,
                  EMBEDDING_DIM=64,
                  MAX_SEQUENCE_LENGTH=100,
@@ -31,7 +30,7 @@ class Configuration(object):
                  corpus_file_path="../data/train_zh.txt",
                  model_file_path="../data/model/re_zh_model.lstm.hdf5",
                  ) -> None:
-        self.tokenizer = tokenizer
+        self.word_segmentor = word_segmentor
         self.MAX_NB_WORDS = MAX_NB_WORDS
         self.EMBEDDING_DIM = EMBEDDING_DIM
         self.MAX_SEQUENCE_LENGTH = MAX_SEQUENCE_LENGTH
@@ -47,6 +46,7 @@ class Inputer(object):
     def __init__(self, config: Configuration) -> None:
         ##初始化 位置向量 20维数
         self.config = config
+        self.word_segmentor = config.word_segmentor
         self.MAX_SEQUENCE_LENGTH = config.MAX_SEQUENCE_LENGTH
         self.EMBEDDING_DIM = config.EMBEDDING_DIM
         self.MAX_NB_WORDS = config.MAX_NB_WORDS
@@ -93,7 +93,7 @@ class Inputer(object):
                     file_sentences.append(line.split("|")[1].strip())
 
             all_pos_set = set(self.POS_list)
-            pairs_all, position_all = jieba_seg.segListWithNerTag(file_sentences)
+            pairs_all, position_all = self.word_segmentor.segListWithNerTag(file_sentences)
             for pairs in pairs_all:
                 for pair in pairs:
                     if not all_pos_set.__contains__(pair.flag):
@@ -158,7 +158,7 @@ class SentencesVector(object):
             for i in range(len(sentences)):
                 sentence = sentences[i]
                 try:
-                    pairs, position_pair = jieba_seg.segWithNerTag(sentence)
+                    pairs, position_pair = inputer.word_segmentor.segWithNerTag(sentence)
                     pairs_all.append(pairs)
                     position_all.append(position_pair)
                     if not classifications_all is None:
@@ -171,7 +171,7 @@ class SentencesVector(object):
         #     pairs_all = pairs_all[-config.MAX_SEQUENCE_LENGTH:]
         #     position_all = position_all[-config.MAX_SEQUENCE_LENGTH:]
         # 获取句子向量
-        texts = list(map(lambda pair: reduce(lambda x, y: x + y, map(lambda x: x.word + " ", pair)), pairs_all))
+        texts = list(map(lambda pair: reduce(lambda x, y: x + y, map(lambda x: x[0] + " ", pair)), pairs_all))
         sequences = inputer.tokenizer.texts_to_sequences(texts)
         self.sentence_vec = pad_sequences(sequences, maxlen=config.MAX_SEQUENCE_LENGTH)
         # 获取位置向量
@@ -180,7 +180,7 @@ class SentencesVector(object):
             e1_position = position_all[i][0]
             e2_position = position_all[i][1]
             sentence_posi_maxtrix = np.zeros((config.MAX_SEQUENCE_LENGTH, inputer.position_matrix.shape[1]*2))
-            tokens = list(map(lambda x: x.word, pairs_all[i]))
+            tokens = list(map(lambda x: x[0], pairs_all[i]))
             for j in range(len(tokens)):
                 e1_pv = inputer.position_matrix[j - e1_position]
                 e2_pv = inputer.position_matrix[j - e2_position]
@@ -204,8 +204,8 @@ class SentencesVector(object):
         self.pos_vec = np.zeros((len(pairs_all), config.MAX_SEQUENCE_LENGTH, len(all_pos)))
         for i in range(len(pairs_all)):
             def getPosIndex(x):
-                if all_pos.__contains__(x.flag):
-                    return all_pos.index(x.flag)
+                if all_pos.__contains__(x[1]):
+                    return all_pos.index(x[1])
                 else:
                     return 0
 

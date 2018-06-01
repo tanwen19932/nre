@@ -16,7 +16,7 @@ class JieBaTokenizer(object):
         totalWord = []
         words = pseg.cut(str)
         for word in words:
-            totalWord.append(word)
+            totalWord.append((word.word,word.flag))
         return totalWord
 
     def segSpaceSplit(self, str):
@@ -35,7 +35,7 @@ class JieBaTokenizer(object):
             if isinstance(tag, Tag):
                 pairs.extend(self.segOnly(temp_str))
                 from jieba.posseg import pair
-                pairs.append(pair(tag.text, tag.name))
+                pairs.append((tag.text, tag.name))
                 if (e_count == 0):
                     position_e1 = len(pairs) - 1
                 elif (e_count == 1):
