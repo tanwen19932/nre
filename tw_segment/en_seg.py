@@ -1,11 +1,13 @@
 import nltk
 from bs4 import BeautifulSoup, Tag, NavigableString
+from nltk.tokenize import WordPunctTokenizer
 
 
 class EnSegmentor(object):
     def segOnly(self, str):
         totalWord = []
-        wordList = list(filter(lambda x:len(x)>0 ,str.split(" ")))
+
+        wordList = list(filter(lambda x:len(x)>0 ,WordPunctTokenizer().tokenize(str)))
         for word in nltk.pos_tag(wordList):
             totalWord.append(word)
         return totalWord
@@ -61,10 +63,9 @@ class EnSegmentor(object):
 if __name__ == '__main__':
     tokenizer = EnSegmentor()
 
-    with open("../data/train_en.txt", "r") as f:
-        for line in f.readlines():
-            line = line.strip().split('|')[1]
-            pairList = tokenizer.segWithNerTag(line)
-            print(pairList)
-            print()
+    line = "Component-Whole(e2,e1)|The system as described above has its greatest application in an arrayed <e1>configuration</e1> of antenna <e2>elements</e2>."
+    # print(WordPunctTokenizer().tokenize(line))
+    pairList, position_all = tokenizer.segWithNerTag(line)
+    print(pairList)
+    print(position_all)
             # print(list(map(lambda x:x.word,pairList)))

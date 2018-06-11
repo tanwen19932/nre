@@ -43,8 +43,9 @@ class Configuration(object):
 
 
 class Inputer(object):
+    # 初始化过程中，读取了词向量，位置矩阵，还读取了pos的种类和关系种类及相关词
     def __init__(self, config: Configuration) -> None:
-        ##初始化 位置向量 20维数
+        ##初始化 位置向量矩阵 ：max_sequence_length * 20
         self.config = config
         self.word_segmentor = config.word_segmentor
         self.MAX_SEQUENCE_LENGTH = config.MAX_SEQUENCE_LENGTH
@@ -54,16 +55,17 @@ class Inputer(object):
             position_matrix = np.random.randn(config.MAX_SEQUENCE_LENGTH, 20)
             np.save(config.position_matrix_file_path[0:-4], position_matrix)
         self.position_matrix = np.load(config.position_matrix_file_path)
-        print("位置向量", self.position_matrix.shape)
+        print("位置向量矩阵的大小", self.position_matrix.shape)
 
         ##初始化 tokenizer 转化文本为sequence
-        default_model: dict = tw_w2v.get_word2vec_dic(config.word2vec_file_path)
-        self.tokenizer = Tokenizer(num_words=config.MAX_NB_WORDS)  # 传入我们词向量的字典
-        self.tokenizer.fit_on_texts(default_model.keys())  # 传入我们的训练数据，得到训练数据中出现的词的字典
+        default_model = {}
+        default_model = tw_w2v.get_word2vec_dic(config.word2vec_file_path)
+        self.tokenizer = Tokenizer(num_words=config.MAX_NB_WORDS)  #
+        vocab = default_model.vocab
+        self.tokenizer.fit_on_texts(vocab.keys())
         word_index = self.tokenizer.word_index
         self.num_words = min(config.MAX_NB_WORDS, len(word_index))
-
-        ##初始化词向量
+        ##初始化词向量，词向量矩阵 ： 50000*64
         self.embedding_matrix = np.zeros((self.num_words, config.EMBEDDING_DIM))
         for word, i in word_index.items():
             if i >= config.MAX_NB_WORDS:
@@ -75,36 +77,37 @@ class Inputer(object):
                     self.embedding_matrix[i] = embedding_vector
                 except:
                     pass
+        print("词向量矩阵的大小",self.embedding_matrix.shape)
 
-        print("词向量",self.embedding_matrix.shape)
         ##初始化词性标注List
         self.POS_list = []
         if os.path.exists(config.POS_list_file_path):
-            with open(config.POS_list_file_path) as f:
+            with open(config.POS_list_file_path, encoding="UTF-8") as f:
                 for line in f.readlines():
                     if len(line.strip()) > 0:
                         self.POS_list.append(line.strip())
         else:
             file_types = []
             file_sentences = []
-            with open(config.corpus_file_path, 'r') as f:
+            with open(config.corpus_file_path, 'r', encoding="UTF-8") as f:
                 for line in f.readlines():
                     file_types.append(line.split("|")[0].strip())
                     file_sentences.append(line.split("|")[1].strip())
 
             all_pos_set = set(self.POS_list)
-            pairs_all, position_all = self.word_segmentor.segListWithNerTag(file_sentences)
-            for pairs in pairs_all:
+            wordPairList_allSen, entityPosition_allSen = self.word_segmentor.segListWithNerTag(file_sentences)
+            for pairs in wordPairList_allSen:
                 for pair in pairs:
                     if not all_pos_set.__contains__(pair.flag):
                         self.POS_list.append(pair.flag)
                         all_pos_set.add(pair.flag)
-            with open(config.POS_list_file_path, "w") as f:
+            with open(config.POS_list_file_path, "w", encoding="UTF-8") as f:
                 for pos in self.POS_list:
                     f.write(pos)
                     f.write("\n")
-                    ##初始化分类类型
         print("POS类型", len(self.POS_list))
+
+        ##关系种类，RelationWordAdmin有relations和relation_word_dic
         self.relationWordAdmin = RelationWordAdmin(config.types_file_path);
         self.types = self.relationWordAdmin.relations
         print("分类类型", len(self.types))
@@ -119,18 +122,19 @@ class Inputer(object):
         return embedding_layer
 
     def getSentenceVectorFromFile(self, file):
-        file_types = []
-        file_sentences = []
-        with open(file, 'r') as f:
+        relaTypes = []
+        sentences = []
+        with open(file, 'r',encoding="UTF-8") as f:
             for line in f.readlines():
                 the_type = line.split("|")[0].strip()
                 sentence = line.split("|")[1].strip()
                 if self.types.__contains__(the_type):
-                    file_types.append(the_type)
-                    file_sentences.append(sentence)
+                    relaTypes.append(the_type)
+                    sentences.append(sentence)
                 else:
-                    print("类型不在列表内：",the_type , file_sentences)
-        return SentencesVector(self, file_sentences, classifications =file_types)
+                    print("类型不在列表内：",the_type , sentences)
+        # 提取出句子及关系分类，传入SentencesVector中
+        return SentencesVector(self, sentences, classifications =relaTypes)
 
 
 class SentencesVector(object):
@@ -140,47 +144,51 @@ class SentencesVector(object):
     classifications_vec = None
     inputer=None
 
-    def __init__(self, inputer: Inputer, sentences=None, pairs_all=None, position_all=None,
+    def __init__(self, inputer: Inputer, sentences=None, wordPairList_allSen=None, entityPosition_allSen=None,
                  classifications=None) -> None:
         self.inputer = inputer
         config = inputer.config
         classifications_all = None
         if sentences == None:
-            if pairs_all == None or position_all == None:
-                raise Exception("传入句子list 或者 pairs_all,position_all")
+            if wordPairList_allSen == None or entityPosition_allSen == None:
+                raise Exception("传入句子list 或者 wordPairList_allSen,entityPosition_allSen")
         else:
             if not isinstance(sentences, list):
                 raise Exception("传入句子list")
-            pairs_all = []
-            position_all = []
+            wordPairList_allSen = []
+            entityPosition_allSen = []
             if not classifications is None:
                 classifications_all = []
             for i in range(len(sentences)):
                 sentence = sentences[i]
                 try:
-                    pairs, position_pair = inputer.word_segmentor.segWithNerTag(sentence)
-                    pairs_all.append(pairs)
-                    position_all.append(position_pair)
+                    # pairList_wordPos是一个句子中的词与词性构成的元组, position_entityPair是一个句子中的两个实体的位置的元组
+                    pairList_wordPos, position_entityPair = inputer.word_segmentor.segWithNerTag(sentence)
+                    wordPairList_allSen.append(pairList_wordPos)
+                    entityPosition_allSen.append(position_entityPair)
                     if not classifications_all is None:
                         classifications_all.append(classifications[i])
                 except Exception as ex:
                     print("[句子错误!]-", sentence)
                     pass
 
-        # if len(pairs_all) > config.MAX_SEQUENCE_LENGTH:
-        #     pairs_all = pairs_all[-config.MAX_SEQUENCE_LENGTH:]
-        #     position_all = position_all[-config.MAX_SEQUENCE_LENGTH:]
+        # if len(wordPairList_allSen) > config.MAX_SEQUENCE_LENGTH:
+        #     wordPairList_allSen = wordPairList_allSen[-config.MAX_SEQUENCE_LENGTH:]
+        #     entityPosition_allSen = entityPosition_allSen[-config.MAX_SEQUENCE_LENGTH:]
         # 获取句子向量
-        texts = list(map(lambda pair: reduce(lambda x, y: x + y, map(lambda x: x[0] + " ", pair)), pairs_all))
+        #     获取每个句子（去掉标点）
+        texts = list(map(lambda pair: reduce(lambda x, y: x + y, map(lambda x: x[0] + " ", pair)), wordPairList_allSen))
         sequences = inputer.tokenizer.texts_to_sequences(texts)
         self.sentence_vec = pad_sequences(sequences, maxlen=config.MAX_SEQUENCE_LENGTH)
+
         # 获取位置向量
-        self.position_vec = np.zeros((len(position_all), config.MAX_SEQUENCE_LENGTH, inputer.position_matrix.shape[1]*2))
-        for i in range(len(position_all)):
-            e1_position = position_all[i][0]
-            e2_position = position_all[i][1]
+        # 三维矩阵，每个句子对应一个二维矩阵，该二维矩阵是设计规则生成出来的，跟句子中的每个词都有关系
+        self.position_vec = np.zeros((len(entityPosition_allSen), config.MAX_SEQUENCE_LENGTH, inputer.position_matrix.shape[1]*2))
+        for i in range(len(entityPosition_allSen)):
+            e1_position = entityPosition_allSen[i][0]
+            e2_position = entityPosition_allSen[i][1]
             sentence_posi_maxtrix = np.zeros((config.MAX_SEQUENCE_LENGTH, inputer.position_matrix.shape[1]*2))
-            tokens = list(map(lambda x: x[0], pairs_all[i]))
+            tokens = list(map(lambda x: x[0], wordPairList_allSen[i]))
             for j in range(len(tokens)):
                 e1_pv = inputer.position_matrix[j - e1_position]
                 e2_pv = inputer.position_matrix[j - e2_position]
@@ -191,7 +199,7 @@ class SentencesVector(object):
         # 获取词性向量
         # from tw_word2vec.cnn_input_zh import all_pos_list
         # all_pos_set = set(all_pos_list)
-        # for pairs in pairs_all:
+        # for pairs in wordPairList_allSen:
         #     for pair in pairs:
         #         if not all_pos_set.__contains__(pair.flag):
         #             all_pos_list.append(pair.flag)
@@ -200,20 +208,27 @@ class SentencesVector(object):
         #     for pos in all_pos_list:
         #         f.write(pos)
         #         f.write("\n")
+
+        # 获取词性向量，先把词、跟词性的元组对的词性部分换成词性在all_pos中的索引，再把索引变成one-hot向量
+        # 三维矩阵，每个句子的每个词都有一个one-hot向量表示词性
         all_pos = list(inputer.POS_list)
-        self.pos_vec = np.zeros((len(pairs_all), config.MAX_SEQUENCE_LENGTH, len(all_pos)))
-        for i in range(len(pairs_all)):
+        print("all_pos:" + str(len(all_pos)))
+        self.pos_vec = np.zeros((len(wordPairList_allSen), config.MAX_SEQUENCE_LENGTH, len(all_pos)))
+        for i in range(len(wordPairList_allSen)):
             def getPosIndex(x):
                 if all_pos.__contains__(x[1]):
                     return all_pos.index(x[1])
                 else:
                     return 0
 
-            pos_y = list(map(lambda x: getPosIndex(x), pairs_all[i]))
+            pos_y = list(map(lambda x: getPosIndex(x), wordPairList_allSen[i]))
+            # 转换成one-hot矩阵
             pos_matrix = to_categorical(pos_y, len(all_pos))
             pos_matrix_all = np.zeros((config.MAX_SEQUENCE_LENGTH, len(all_pos)))
             pos_matrix_all[-len(pos_matrix):] = pos_matrix
             self.pos_vec[i:] = pos_matrix_all
+        # 这是relation的分类矩阵
+        # 跟对pos，posi的处理一样，最后得到的是一个二维矩阵，每个句子对应一个One-hot向量
         if classifications_all != None:
             classifications_y = list(map(lambda x: inputer.types.index(x), classifications_all))
             self.classifications_vec = to_categorical(classifications_y, len(inputer.types))

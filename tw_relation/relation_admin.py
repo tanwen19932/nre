@@ -16,7 +16,7 @@ segmentor = JieBaTokenizer()
 def getFileLines(file_path):
     result = []
     try:
-        with open(file_path, "r") as f:
+        with open(file_path, "r", encoding="UTF-8") as f:
             for line in f.readlines():
                 line = line.strip()
                 if (len(line) > 0):
@@ -48,9 +48,17 @@ class RelationWordAdmin(object):
                 detail.append("")
                 continue
             is_add = False
+            # for pair in paris_all[i][pos[0]+1:pos[1]]:
+            #     print(pair)
+            #     if pair.word in self.relation_word_dic[predict_type]:
+            #         detail.append(pair.word)
+            #         is_add=True
+            #         break
             for pair in paris_all[i][pos[0]+1:pos[1]]:
-                if pair.word in self.relation_word_dic[predict_type]:
-                    detail.append(pair.word)
+                print(pair)
+                print(self.relation_word_dic)
+                if pair[0] in self.relation_word_dic[predict_type]:
+                    detail.append(pair[0])
                     is_add=True
                     break
             if not is_add:
@@ -197,7 +205,7 @@ if __name__ == '__main__':
 
     if relation_admin.relation_word_dic.__len__()==0:
         class_corpus = {}
-        with open("../data/train_zh.txt", "r") as f:
+        with open("../data/train_zh.txt", "r",encoding="UTF-8") as f:
             for line in f.readlines():
                 line = line.strip()
                 classification = line.split("|")[0].strip()

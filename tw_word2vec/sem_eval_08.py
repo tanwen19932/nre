@@ -27,7 +27,8 @@ class CnnTrainerEn():
                                name="sequence_input")  # 100*1最多100个词组成输入
         embedded_sequences = inputer.getWordEmbedding()(sequence_input)  # 句子转为向量矩阵 训练集大小*100*64维
         # model test2
-        posi_input = Input(shape=(config.MAX_SEQUENCE_LENGTH, sentences_vector.position_vec.shape[2]), name="posi_input")
+        posi_input = Input(shape=(config.MAX_SEQUENCE_LENGTH, sentences_vector.position_vec.shape[2]),
+                           name="posi_input")
         # pos_input = Input(shape=(config.MAX_SEQUENCE_LENGTH,sentences_vector.pos_vec.shape[2]), name="pos_input")
         embedded_sequences = keras.layers.concatenate([embedded_sequences, posi_input])
         c1 = Conv1D(filters=10, kernel_size=3,
@@ -53,7 +54,7 @@ class CnnTrainerEn():
         checkpoint = ModelCheckpoint(config.model_file_path, monitor='val_loss', verbose=1, save_best_only=True,
                                      mode='min')
         # 当监测值不再改善时，该回调函数将中止训练
-        early = EarlyStopping(monitor="val_loss", mode="min", patience=50)
+        early = EarlyStopping(monitor="val_loss", mode="min", patience=200)
 
         # 开始训练
         callbacks_list = [checkpoint, early]  # early
@@ -63,10 +64,11 @@ class CnnTrainerEn():
                   sentences_vector.classifications_vec,
                   batch_size=sentences_vector.sentence_vec.shape[1],
                   epochs=100,
-                  # validation_split=0.2,
+                  validation_split=0.2,
                   # validation_data=({'sequence_input': x_test, 'posi_input': x_test_posi}, y_test),
                   callbacks=callbacks_list)
         return model
+
 
 if __name__ == '__main__':
     config = Configuration(

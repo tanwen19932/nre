@@ -23,12 +23,13 @@ class Trainer(object):
         config = self.config
         if not os.path.exists(config.model_file_path):
             vector = inputer.getSentenceVectorFromFile(config.corpus_file_path)
-            print(vector.sentence_vec.shape)
-            print(vector.position_vec.shape)
-            print(vector.pos_vec.shape)
-            print(vector.classifications_vec.shape)
+            print("句子向量矩阵的shape" + str(vector.sentence_vec.shape)) #(346, 100)
+            print("位置向量矩阵的shape" + str(vector.position_vec.shape)) # (346, 100, 40)
+            print("词性向量矩阵的shape" + str(vector.pos_vec.shape)) # (346, 100, 84)
+            print("关系分类矩阵的shape" + str(vector.classifications_vec.shape)) # (346, 21)
             self.model = self.train(vector)
             self.model.save(config.model_file_path)
+
         self.model = load_model(config.model_file_path)
 
     def train(self, sentence_vector: SentencesVector):

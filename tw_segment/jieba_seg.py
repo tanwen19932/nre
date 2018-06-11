@@ -70,11 +70,14 @@ class JieBaTokenizer(object):
 
 if __name__ == '__main__':
     tokenizer = JieBaTokenizer()
+    line = "部分-整体(e1,e2)|(1) 求数的<e>相反数</e>是整数集合 Z 、有理数集合 Q 和实数集合 R 上的<e>一元运算</e>；。"
+    pairs, positions = tokenizer.segWithNerTag(line)
+    print(pairs)
+    print(positions)
+    print(pairs[positions[0]])
+    print(pairs[positions[1]])
+    pairList = tokenizer.segOnly(line)
+    print(pairList)
 
-    with open("../data/rawZhData/news_raw_wc2017-12-19.txt", "r") as f:
-        for line in f.readlines():
-            line = line.strip()
-            pairList = tokenizer.segOnly(line)
-            print(pairList)
-            print()
+
             # print(list(map(lambda x:x.word,pairList)))

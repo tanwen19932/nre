@@ -42,17 +42,17 @@ class Outputer(object):
             except:
                 print(sentence)
                 pass
-        predict_types = self.trainer.predict(SentencesVector(self.inputer,pairs_all=pairs_all,position_all=position_all))
+        predict_types = self.trainer.predict(SentencesVector(self.inputer,wordPairList_allSen=pairs_all, entityPosition_allSen=position_all))
         predict_details = self.inputer.relationWordAdmin.getRelationDetail(pairs_all,position_all,predict_types)
         result = []
         for i in range(len(position_all)):
             entity1 = pairs_all[i][position_all[i][0]]
             entity2 = pairs_all[i][position_all[i][1]]
             obj = {}
-            obj["e1"] = entity1.word
-            obj["e1_type"] = entity1.flag
-            obj["e2"] = entity2.word
-            obj["e2_type"] = entity2.flag
+            obj["e1"] = entity1[0]
+            obj["e1_type"] = entity1[1]
+            obj["e2"] = entity2[0]
+            obj["e2_type"] = entity2[1]
             obj["predict_type"] = predict_types[i]
             obj["relation_detail"] = predict_details[i]
             obj["sentence"] = sentences[i]
