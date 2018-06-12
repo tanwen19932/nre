@@ -13,8 +13,11 @@ class Word2VecHelpper(object):
     def __init__(self,filepath):
         import pickle
         f = open(filepath, 'rb')
+        file = '../data/word2vec/news_12g_baidubaike_20g_novel_90g_embedding_64.bin'
         self.word2vec_model = {}
-        self.word2vec_model = pickle.load(f)
+        print("加载词向量")
+        self.word2vec_model = gensim.models.KeyedVectors.load_word2vec_format(file, binary=True)
+        print("词向量加载完成")
         f.close()
 
     def get(self):
