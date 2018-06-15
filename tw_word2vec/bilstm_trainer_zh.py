@@ -43,7 +43,7 @@ class BiLstmTrainer():
         print(model.summary())
         input("continue?")
         # Learning rate 和 Learning rate decay，随着训练的进行，会慢慢减小learning rate
-        adam = optimizers.Adam(lr=0.001, decay=0.0001)
+        adam = optimizers.Adam(lr=0.001)
         model.compile(loss='categorical_crossentropy',
                       optimizer=adam,
                       metrics=["categorical_accuracy"])
@@ -53,7 +53,7 @@ class BiLstmTrainer():
         # ModelCheckpoint回调函数将在每个epoch后保存模型到filepath，当save_best_only=True保存验证集误差最小的参数
         checkpoint = ModelCheckpoint(config.model_file_path, monitor='val_loss', verbose=1, mode='min', save_best_only= True)
         # 当监测值不再改善时，该回调函数将中止训练
-        early = EarlyStopping(monitor="val_loss", mode="min", patience=300)
+        early = EarlyStopping(monitor="val_loss", mode="min", patience=1000)
         metrics = Metrics(sentences_vector)
         # 开始训练
         callbacks_list = [checkpoint, early]  # early
@@ -62,7 +62,7 @@ class BiLstmTrainer():
                    'pos_input': sentences_vector.pos_vec},
                   sentences_vector.classifications_vec,
                   batch_size=sentences_vector.sentence_vec.shape[1],
-                  epochs=300,
+                  epochs=30000,
                   validation_split=0.2,
                   # validation_data=({'sequence_input': x_test, 'posi_input': x_test_posi}, y_test),
                   callbacks=callbacks_list)
