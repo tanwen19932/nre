@@ -10,14 +10,18 @@ def get_word2vec_dic(filepath):
 
 class Word2VecHelpper(object):
     word2vec_model = {}
-    def __init__(self,filepath):
+    def __init__(self,filepath,isJson =True):
         import pickle
         f = open(filepath, 'rb')
-        file = '../data/word2vec/news_12g_baidubaike_20g_novel_90g_embedding_64.bin'
-        self.word2vec_model = {}
-        print("加载词向量")
-        self.word2vec_model = gensim.models.KeyedVectors.load_word2vec_format(file, binary=True)
-        print("词向量加载完成")
+        if(isJson):
+            self.word2vec_model = {}
+            self.word2vec_model = pickle.load(f)
+        else:
+            self.word2vec_model = {}
+            print("加载词向量")
+            self.word2vec_model = gensim.models.KeyedVectors.load_word2vec_format(filepath, binary=True)
+            print("词向量加载完成")
+
         f.close()
 
     def get(self):
