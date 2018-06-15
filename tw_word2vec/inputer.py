@@ -61,8 +61,13 @@ class Inputer(object):
         default_model = {}
         default_model = tw_w2v.get_word2vec_dic(config.word2vec_file_path)
         self.tokenizer = Tokenizer(num_words=config.MAX_NB_WORDS)  #
-        vocab = default_model.vocab
-        self.tokenizer.fit_on_texts(vocab.keys())
+        words = None
+        if isinstance(default_model,dict):
+            words = default_model.keys()
+        else:
+            words =  default_model.vocab.keys()
+
+        self.tokenizer.fit_on_texts(words)
         word_index = self.tokenizer.word_index
         self.num_words = min(config.MAX_NB_WORDS, len(word_index))
         ##初始化词向量，词向量矩阵 ： 50000*64
