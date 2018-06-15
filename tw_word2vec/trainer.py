@@ -29,7 +29,6 @@ class Trainer(object):
             print("关系分类矩阵的shape" + str(vector.classifications_vec.shape)) # (346, 21)
             self.model = self.train(vector)
             self.model.save(config.model_file_path)
-
         self.model = load_model(config.model_file_path)
 
     def train(self, sentence_vector: SentencesVector):

@@ -3,7 +3,8 @@ Neural Relation Extraction (NRE) with wechat API
 
 SemEval2010_task8 relation extraction
 
-use cnn,lstm,biLstm
+use cnn,lstm,biLstm，attention biLstm
+在sem_val_08.py中调用bilstm_attention_trainer
 keras TensorFlow Backend
 
 # 1. 关系中文

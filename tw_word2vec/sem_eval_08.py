@@ -62,7 +62,7 @@ class CnnTrainerEn():
         model.fit({'sequence_input': sentences_vector.sentence_vec, 'posi_input': sentences_vector.position_vec,
                    'pos_input': sentences_vector.pos_vec},
                   sentences_vector.classifications_vec,
-                  batch_size=sentences_vector.sentence_vec.shape[1],
+                  batch_size= 50,
                   epochs=100,
                   validation_split=0.2,
                   # validation_data=({'sequence_input': x_test, 'posi_input': x_test_posi}, y_test),
@@ -82,6 +82,7 @@ if __name__ == '__main__':
         model_file_path="../data/model/re_sem_eval_en_model.cnn.hdf5",
     )
     inputer = Inputer(config)
+    from tw_word2vec.bilstm_attention_trainer_zh import BiLstmAttentionTrainer
     trainer = Trainer(inputer, CnnTrainerEn())
     outputer = Outputer(trainer)
     predict_texts = [" <e1>level</e1> of experience has already been mentioned in the previous <e2>chapter</e2>.",
