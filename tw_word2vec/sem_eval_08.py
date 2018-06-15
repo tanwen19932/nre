@@ -63,7 +63,7 @@ class CnnTrainerEn():
                    'pos_input': sentences_vector.pos_vec},
                   sentences_vector.classifications_vec,
                   batch_size= 50,
-                  epochs=100,
+                  epochs=50000,
                   validation_split=0.2,
                   # validation_data=({'sequence_input': x_test, 'posi_input': x_test_posi}, y_test),
                   callbacks=callbacks_list)

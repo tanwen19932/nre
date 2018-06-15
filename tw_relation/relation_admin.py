@@ -91,7 +91,7 @@ def generateRelationWord(sentence_list: list) -> list:
 
 
 
-from pyhanlp import *
+
 def getRelationDetailByHDP(sentence_list):
     # 聚类获取结果
     corpus = []
