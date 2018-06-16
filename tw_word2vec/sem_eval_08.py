@@ -75,7 +75,7 @@ if __name__ == '__main__':
         word_segmentor=EnSegmentor(),
         EMBEDDING_DIM=128,
         position_matrix_file_path="../data/posi_matrix.npy",
-        word2vec_file_path="../data/needed_word2vec.bin",
+        word2vec_file_path="../data/needed_word2vec.pkl",
         POS_list_file_path="../data/pos_list.txt",
         types_file_path="../data/relations_en.txt",
         corpus_file_path="../data/train_en.txt",
