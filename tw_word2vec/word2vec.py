@@ -10,10 +10,10 @@ def get_word2vec_dic(filepath):
 
 class Word2VecHelpper(object):
     word2vec_model = {}
-    def __init__(self,filepath,isJson =True):
+    def __init__(self,filepath:str,isJson =True):
         import pickle
         f = open(filepath, 'rb')
-        if(isJson):
+        if isJson or filepath.endswith(".pkl"):
             self.word2vec_model = {}
             self.word2vec_model = pickle.load(f)
         else:
