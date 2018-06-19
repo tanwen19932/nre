@@ -4,12 +4,13 @@ from nltk.tokenize import WordPunctTokenizer
 
 
 class EnSegmentor(object):
+
     def segOnly(self, str):
         totalWord = []
-
-        wordList = list(filter(lambda x:len(x)>0 ,WordPunctTokenizer().tokenize(str)))
-        for word in nltk.pos_tag(wordList):
-            totalWord.append(word)
+        wordList = str.split(" ")
+        for word in wordList:
+            if len(word)>0:
+                totalWord.append((word,"n"))
         return totalWord
 
     def segSpaceSplit(self, str):
@@ -63,7 +64,7 @@ class EnSegmentor(object):
 if __name__ == '__main__':
     tokenizer = EnSegmentor()
 
-    line = "Component-Whole(e2,e1)|The system as described above has its greatest application in an arrayed <e1>configuration</e1> of antenna <e2>elements</e2>."
+    line = "The system as described above has its greatest application in an arrayed <e1>configuration</e1> of antenna <e2>elements</e2>."
     # print(WordPunctTokenizer().tokenize(line))
     pairList, position_all = tokenizer.segWithNerTag(line)
     print(pairList)

@@ -44,8 +44,8 @@ class LstmTrainer():
 
         checkpoint = ModelCheckpoint(config.model_file_path, monitor='val_loss', verbose=1, mode='min')
         # 当监测值不再改善时，该回调函数将中止训练
-        early = EarlyStopping(monitor="val_loss", mode="min", patience=50)
-        metrics = Metrics()
+        early = EarlyStopping(monitor="categorical_accuracy", mode="min", patience=50)
+        metrics = Metrics(sentences_vector)
         # 开始训练
         callbacks_list = [checkpoint, early,metrics]  # early
         # And trained it via:

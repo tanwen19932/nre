@@ -48,7 +48,7 @@ if __name__ == '__main__':
     api = falcon.API()
     config = Configuration(
         position_matrix_file_path="../data/posi_matrix.npy",
-        word2vec_file_path="../data/needed_zh_word2vec.bin",
+        word2vec_file_path="../data/needed_zh_word2vec.pkl",
         POS_list_file_path="../data/military/pos_list.txt",
         types_file_path="../data/military/relations_zh.txt",
         corpus_file_path="../data/military/train_zh.txt",
