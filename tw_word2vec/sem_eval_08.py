@@ -3,7 +3,7 @@
 # @File  : sem_eval_08.py
 # @Author: TW
 # @Date  : 2018/5/23
-# @Desc  : 不可用！！
+# @Desc  :
 
 import keras
 from keras import optimizers
@@ -13,7 +13,6 @@ from keras.layers import MaxPooling1D, Dropout, regularizers, Conv1D
 from keras.models import Model
 
 from tw_segment.en_seg import EnSegmentor
-from tw_word2vec.bilstm_trainer_zh import BiLstmTrainer
 from tw_word2vec.inputer import SentencesVector, Configuration, Inputer
 from tw_word2vec.outputer import Outputer
 from tw_word2vec.trainer import Trainer
@@ -82,7 +81,6 @@ if __name__ == '__main__':
         model_file_path="../data/model/re_sem_eval_en_model.cnn.hdf5",
     )
     inputer = Inputer(config)
-    from tw_word2vec.bilstm_attention_trainer_zh import BiLstmAttentionTrainer
     trainer = Trainer(inputer, CnnTrainerEn())
     outputer = Outputer(trainer)
     predict_texts = [" <e1>level</e1> of experience has already been mentioned in the previous <e2>chapter</e2>.",
