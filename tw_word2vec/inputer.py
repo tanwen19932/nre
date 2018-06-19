@@ -71,6 +71,14 @@ class Inputer(object):
         word_index = self.tokenizer.word_index
         self.num_words = min(config.MAX_NB_WORDS, len(word_index))
         ##初始化词向量，词向量矩阵 ： 50000*64
+        model_dim =0
+        for key in default_model:
+            model_dim = default_model[key].shape[0]
+            break
+        if self.EMBEDDING_DIM != model_dim:
+            print("WARN ! 设置的词向量与读取维数不同，默认采用读取的词向量维数。", self.EMBEDDING_DIM, model_dim)
+            self.EMBEDDING_DIM =model_dim
+            config.EMBEDDING_DIM = model_dim
         self.embedding_matrix = np.zeros((self.num_words, config.EMBEDDING_DIM))
         for word, i in word_index.items():
             if i >= config.MAX_NB_WORDS:
@@ -80,8 +88,10 @@ class Inputer(object):
                 # 文本数据中的词在词向量字典中没有，向量为取0；如果有则取词向量中该词的向量
                 try:
                     self.embedding_matrix[i] = embedding_vector
-                except:
-                    pass
+                except Exception as e:
+                    print(e)
+            else:
+                print("warn! ",word,"不在词向量列表")
         print("词向量矩阵的大小",self.embedding_matrix.shape)
 
         ##初始化词性标注List
