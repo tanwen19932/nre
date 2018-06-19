@@ -72,7 +72,7 @@ class CnnTrainerEn():
 if __name__ == '__main__':
     config = Configuration(
         word_segmentor=EnSegmentor(),
-        EMBEDDING_DIM=128,
+        EMBEDDING_DIM=300,
         position_matrix_file_path="../data/posi_matrix.npy",
         word2vec_file_path="../data/needed_word2vec.pkl",
         POS_list_file_path="../data/pos_list.txt",

@@ -69,7 +69,7 @@ class Inputer(object):
 
         self.tokenizer.fit_on_texts(words)
         word_index = self.tokenizer.word_index
-        self.num_words = min(config.MAX_NB_WORDS, len(word_index))
+        self.num_words = min(config.MAX_NB_WORDS, len(word_index)+1)
         ##初始化词向量，词向量矩阵 ： 50000*64
         model_dim =0
         for key in default_model:
