@@ -5,6 +5,8 @@ import numpy as np
 from keras.preprocessing import text, sequence
 from tw_segment import  jieba_seg
 def get_word2vec_dic(filepath):
+    if filepath.endswith(".bin"):
+        return Word2VecHelpper(filepath=filepath, isJson = False).word2vec_model
     return Word2VecHelpper(filepath=filepath).word2vec_model
 
 

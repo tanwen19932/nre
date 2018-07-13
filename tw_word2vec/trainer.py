@@ -23,10 +23,10 @@ class Trainer(object):
         config = self.config
         if not os.path.exists(config.model_file_path):
             vector = inputer.getSentenceVectorFromFile(config.corpus_file_path)
-            print("句子向量矩阵的shape" + str(vector.sentence_vec.shape)) #(346, 100)
-            print("位置向量矩阵的shape" + str(vector.position_vec.shape)) # (346, 100, 40)
-            print("词性向量矩阵的shape" + str(vector.pos_vec.shape)) # (346, 100, 84)
-            print("关系分类矩阵的shape" + str(vector.classifications_vec.shape)) # (346, 21)
+            print("句子向量矩阵的shape" + str(vector.sentence_vec.shape))
+            print("位置向量矩阵的shape" + str(vector.position_vec.shape))
+            print("词性向量矩阵的shape" + str(vector.pos_vec.shape))
+            print("关系分类矩阵的shape" + str(vector.classifications_vec.shape))
             self.model = self.train(vector)
             self.model.save(config.model_file_path)
         self.model = load_model(config.model_file_path)
@@ -45,7 +45,7 @@ class Trainer(object):
 if __name__ == '__main__':
     config = Configuration(
         position_matrix_file_path="../data/posi_matrix.npy",
-        word2vec_file_path="../data/needed_zh_word2vec.pkl",
+        word2vec_file_path="../data/needed_zh_word2vec.bin",
         POS_list_file_path="../data/military/pos_list.txt",
         types_file_path="../data/military/relations_zh.txt",
         corpus_file_path="../data/military/train_zh.txt",

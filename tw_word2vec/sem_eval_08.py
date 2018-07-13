@@ -16,15 +16,16 @@ from tw_segment.en_seg import EnSegmentor
 from tw_word2vec.inputer import SentencesVector, Configuration, Inputer
 from tw_word2vec.outputer import Outputer
 from tw_word2vec.trainer import Trainer
+from tw_word2vec.bilstm_attention_trainer import BiLstmAttentionTrainer
 
 
 class CnnTrainerEn():
     def train(self, sentences_vector: SentencesVector):
         inputer = sentences_vector.inputer
         config = inputer.config
-        sequence_input = Input(shape=(config.MAX_SEQUENCE_LENGTH,), dtype='int32',
+        embedded_sequences = Input(shape=(config.MAX_SEQUENCE_LENGTH, config.EMBEDDING_DIM*3), dtype='float32',
                                name="sequence_input")  # 100*1最多100个词组成输入
-        embedded_sequences = inputer.getWordEmbedding()(sequence_input)  # 句子转为向量矩阵 训练集大小*100*64维
+        # embedded_sequences = inputer.getWordEmbedding()(sequence_input)  # 句子转为向量矩阵 训练集大小*100*300维
         # model test2
         posi_input = Input(shape=(config.MAX_SEQUENCE_LENGTH, sentences_vector.position_vec.shape[2]),
                            name="posi_input")
@@ -39,7 +40,7 @@ class CnnTrainerEn():
         c1 = Dense(64, activation='relu')(c1)  # 64全连接
         preds = Dense(len(inputer.types), activation='softmax', kernel_regularizer=regularizers.l2(0.01),
                       activity_regularizer=regularizers.l1(0.001))(c1)  # softmax分类
-        model = Model(inputs=[sequence_input, posi_input], outputs=preds)
+        model = Model(inputs=[embedded_sequences, posi_input], outputs=preds)
         print(model.summary())
         adam = optimizers.Adam(lr=0.001, decay=0.0001)
         model.compile(loss='categorical_crossentropy',
@@ -53,12 +54,12 @@ class CnnTrainerEn():
         checkpoint = ModelCheckpoint(config.model_file_path, monitor='val_loss', verbose=1, save_best_only=True,
                                      mode='min')
         # 当监测值不再改善时，该回调函数将中止训练
-        early = EarlyStopping(monitor="val_loss", mode="min", patience=200)
+        early = EarlyStopping(monitor="val_loss", mode="min", patience=500)
 
         # 开始训练
         callbacks_list = [checkpoint, early]  # early
         # And trained it via:
-        model.fit({'sequence_input': sentences_vector.sentence_vec, 'posi_input': sentences_vector.position_vec,
+        model.fit({'sequence_input': sentences_vector.embedded_sequences, 'posi_input': sentences_vector.position_vec,
                    'pos_input': sentences_vector.pos_vec},
                   sentences_vector.classifications_vec,
                   batch_size= 50,
@@ -81,10 +82,12 @@ if __name__ == '__main__':
         model_file_path="../data/model/re_sem_eval_en_model.cnn.hdf5",
     )
     inputer = Inputer(config)
-    trainer = Trainer(inputer, CnnTrainerEn())
+    trainer = Trainer(inputer, BiLstmAttentionTrainer())
     outputer = Outputer(trainer)
+    outputer.getEvaluation()
     predict_texts = [" <e1>level</e1> of experience has already been mentioned in the previous <e2>chapter</e2>.",
                      " <e1>level</e1> of experience has already been mentioned in the previous <e2>chapter</e2>."]
     import json
+
 
     print(json.dumps(outputer.getDescription(predict_texts), ensure_ascii=False))

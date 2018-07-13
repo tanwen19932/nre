@@ -15,6 +15,13 @@ class Outputer(object):
             raise Exception("传入文件不包含 train 方法")
         self.trainer = trainer
 
+    def getEvaluation(self):
+        vector = self.inputer.getSentenceVectorFromFile("../data/test_en.txt")
+        score = self.trainer.model.evaluate({'sequence_input': vector.sentence_vec, 'posi_input': vector.position_vec,
+             'pos_input': vector.pos_vec}, vector.classifications_vec, batch_size=128)
+        print("Test loss:", score[0])
+        print("Test accuracy:", score[1])
+
     def getSentenceRelation(self,predict_texts: list, predict_types):
         relations = []
         for i in range(len(predict_texts)):
@@ -42,8 +49,8 @@ class Outputer(object):
             except:
                 print(sentence)
                 pass
-        predict_types = self.trainer.predict(SentencesVector(self.inputer,wordPairList_allSen=pairs_all, entityPosition_allSen=position_all))
-        predict_details = self.inputer.relationWordAdmin.getRelationDetail(pairs_all,position_all,predict_types)
+        predict_types = self.trainer.predict(SentencesVector(self.inputer, wordPairList_allSen=pairs_all, entityPosition_allSen=position_all))
+        predict_details = self.inputer.relationWordAdmin.getRelationDetail(pairs_all, position_all, predict_types)
         result = []
         for i in range(len(position_all)):
             entity1 = pairs_all[i][position_all[i][0]]

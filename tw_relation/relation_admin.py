@@ -9,7 +9,7 @@ from pprint import pprint
 from tw_segment.jieba_seg import *
 
 ZH_RELATION_PATH = "../data/relations_zh"
-EN_RELATION_PATH = "../data/relations_en"
+EN_RELATION_PATH = "../data/relations_en.txt"
 
 segmentor = JieBaTokenizer()
 
@@ -65,8 +65,6 @@ class RelationWordAdmin(object):
                 detail.append("")
         return detail
 
-relation_admin_zh = RelationWordAdmin(ZH_RELATION_PATH)
-relation_admin_en = RelationWordAdmin(EN_RELATION_PATH)
 
 
 
@@ -201,20 +199,22 @@ def saveRelationWord(relation,words):
 
 if __name__ == '__main__':
     # pprint(relations_en)
-    relation_admin = relation_admin_zh
-
-    if relation_admin.relation_word_dic.__len__()==0:
-        class_corpus = {}
-        with open("../data/train_zh.txt", "r",encoding="UTF-8") as f:
-            for line in f.readlines():
-                line = line.strip()
-                classification = line.split("|")[0].strip()
-                sentence = line.split("|")[1].strip()
-                if not class_corpus.__contains__(classification):
-                    class_corpus[classification] = []
-                if (len(sentence) > 0):
-                    class_corpus[classification].append(sentence)
-        for classification in class_corpus.keys():
-            result =  generateRelationWord(class_corpus[classification])
-            print(classification,result)
-            saveRelationWord(classification,result)
+    relation_admin_zh = RelationWordAdmin(ZH_RELATION_PATH)
+    relation_admin_en = RelationWordAdmin(EN_RELATION_PATH)
+    relation_admin = relation_admin_en
+    print(len(relation_admin.relation_word_dic))
+    # if relation_admin.relation_word_dic.__len__()==0:
+    #     class_corpus = {}
+    #     with open("../data/train_zh.txt", "r",encoding="UTF-8") as f:
+    #         for line in f.readlines():
+    #             line = line.strip()
+    #             classification = line.split("|")[0].strip()
+    #             sentence = line.split("|")[1].strip()
+    #             if not class_corpus.__contains__(classification):
+    #                 class_corpus[classification] = []
+    #             if (len(sentence) > 0):
+    #                 class_corpus[classification].append(sentence)
+    #     for classification in class_corpus.keys():
+    #         result =  generateRelationWord(class_corpus[classification])
+    #         print(classification,result)
+    #         saveRelationWord(classification,result)
