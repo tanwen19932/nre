@@ -283,7 +283,7 @@ class SentencesVector(object):
             #     print(self.inputer.types[i], row[i])
 
             predict_type = self.inputer.types[max_index]
-            if row[max_index]<0.5:
+            if row[max_index]<0.4:
                 print("最大概率为",row[max_index])
                 predict_type = "无"
             output.append(predict_type)

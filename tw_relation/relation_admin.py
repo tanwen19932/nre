@@ -6,6 +6,8 @@
 # @Desc  :
 from pprint import pprint
 
+from pyhanlp import AttachJVMWrapper
+
 from tw_segment.jieba_seg import *
 
 ZH_RELATION_PATH = "../data/relations_zh"
@@ -55,8 +57,8 @@ class RelationWordAdmin(object):
             #         is_add=True
             #         break
             for pair in paris_all[i][pos[0]+1:pos[1]]:
-                print(pair)
-                print(self.relation_word_dic)
+                # print(pair)
+                # print(self.relation_word_dic)
                 if pair[0] in self.relation_word_dic[predict_type]:
                     detail.append(pair[0])
                     is_add=True

@@ -14,6 +14,9 @@ class Metrics(Callback):
         self.val_precisions = []
 
     def on_epoch_end(self, epoch, logs={}):
+        if len(self.validation_data) ==0:
+            print("验证集大小为0！")
+            return
         val_predict = numpy.asarray(self.model.predict(
             {'sequence_input': self.validation_data[0],
              'posi_input': self.validation_data[1],
