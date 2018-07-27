@@ -5,9 +5,6 @@
 # @Date  : 2018/3/27
 # @Desc  :
 from pprint import pprint
-
-from pyhanlp import AttachJVMWrapper
-
 from tw_segment.jieba_seg import *
 
 ZH_RELATION_PATH = "../data/relations_zh"

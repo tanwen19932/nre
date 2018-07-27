@@ -15,8 +15,8 @@ from tw_word2vec.bilstm_attention_trainer import BiLstmAttentionTrainer
 
 class CNN_attention_trainer():
 
-    def buildModel(self, seqLength=100, embeddingDim=300, postionShape2=20, types=19, filters=30, kernel_size=3):
-        sequence_input = Input(shape=(seqLength, embeddingDim * 3), dtype='float32',
+    def buildModel(self, seqLength=100, embeddingDim=300, postionShape2=20, types=19, filters=150, kernel_size=3):
+        sequence_input = Input(shape=(seqLength, embeddingDim), dtype='float32',
                                    name="sequence_input")  # 100*1最多100个词组成输入
         # embedded_sequences = inputer.getWordEmbedding()(sequence_input)  # 句子转为向量矩阵 训练集大小*100*300维
         # model test2
@@ -32,22 +32,21 @@ class CNN_attention_trainer():
         # 在这里加bias应该是一样的，因为后面乘R的时候，R都是one-hot的，所以bias只不过多训练了几个参数，关键位置应该是一样的
         # 这是probs输出的维度应该是s * r
         probs = Dense(types, use_bias=True)(embedded_sequences)
-        # 这里是probs的每一项与当前句子的做点积，输出维度是 s * 1
+        # 这里是probs的每一项与当前句子的关系做点积，输出维度是 s * 1
         probsWithRela = Dot(axes=[2, 1])([probs, typeInput])
         # 对输出的probs归一化，此时输出的维度仍然是s * 1
         probs_softmax = Activation(activation="softmax")(probsWithRela)
         input_permute = Permute((2, 1))(embedded_sequences)
         # 将probs拷贝d份，每一份与维度倒置的输入相乘，相当于倒置的输入乘了一个对角矩阵，输出维度是d*s
-        probs_repeated = RepeatVector(embeddingDim * 3 + postionShape2)(probs_softmax)
+        probs_repeated = RepeatVector(embeddingDim + postionShape2)(probs_softmax)
         realInput = keras.layers.Multiply()([input_permute, probs_repeated])
         # 将上面的输出倒置过来，维度变成s * d,再传入卷积层
         realInput = Permute((2,1))(realInput)
         input_attention = Dropout(0.5)(realInput)
         # 这时输出应该是(s - kernel_size) * filters，这时候每个kernal中w的维度是 kernal_size * d
-        c1 = Conv1D(filters, kernel_size, use_bias=True,
-                    activation='tanh')(input_attention)
+        c1 = Conv1D(filters, kernel_size, use_bias=True, activation='tanh')(input_attention)
         # 这时输出的维度应该只是一个一维的filters
-        c1 = MaxPooling1D(pool_size=seqLength-kernel_size)(c1)
+        c1 = MaxPooling1D(pool_size=seqLength - kernel_size)(c1)
         c1 = Permute((2, 1))(c1)
         c1 = Reshape((filters,))(c1)
         preds = Dense(types, activation='softmax', kernel_regularizer=regularizers.l2(0.01),
@@ -63,7 +62,7 @@ class CNN_attention_trainer():
         config = inputer.config
 
         model = self.buildModel(config.MAX_SEQUENCE_LENGTH, config.EMBEDDING_DIM, sentences_vector.position_vec.shape[2],
-                                    inputer.types, filters=30, kernel_size=3)
+                                    len(inputer.types), filters=150, kernel_size=3)
 
         adam = optimizers.Adam(lr=0.001, decay=0.0001)
         model.compile(loss='categorical_crossentropy',

@@ -29,6 +29,7 @@ class Configuration(object):
                  types_file_path="../data/relations_zh.txt",
                  corpus_file_path="../data/train_zh.txt",
                  model_file_path="../data/model/re_zh_model.lstm.hdf5",
+                 n_gram_size=1,
                  ) -> None:
         self.word_segmentor = word_segmentor
         self.MAX_NB_WORDS = MAX_NB_WORDS
@@ -40,6 +41,7 @@ class Configuration(object):
         self.types_file_path = types_file_path
         self.corpus_file_path = corpus_file_path
         self.model_file_path = model_file_path
+        self.n_gram_size = n_gram_size
 
 
 class Inputer(object):
@@ -51,6 +53,8 @@ class Inputer(object):
         self.MAX_SEQUENCE_LENGTH = config.MAX_SEQUENCE_LENGTH
         self.EMBEDDING_DIM = config.EMBEDDING_DIM
         self.MAX_NB_WORDS = config.MAX_NB_WORDS
+        self.n_gram_size = config.n_gram_size
+        self.vector = []
         if not os.path.isfile(config.position_matrix_file_path):
             position_matrix = np.random.randn(config.MAX_SEQUENCE_LENGTH, 20)
             np.save(config.position_matrix_file_path[0:-4], position_matrix)
@@ -134,7 +138,9 @@ class Inputer(object):
         self.relationWordAdmin = RelationWordAdmin(config.types_file_path)
         self.types = self.relationWordAdmin.relations
         print("分类类型", len(self.types))
-
+        # 如果模型不存在，需要训练模型的话，在这里直接把数据给读了
+        if not os.path.exists(config.model_file_path):
+            self.vector = self.getSentenceVectorFromFile(config.corpus_file_path)
 
     def getWordEmbedding(self):
         embedding_layer = Embedding(self.num_words,  # 词个数
@@ -204,31 +210,18 @@ class SentencesVector(object):
         sequences = inputer.tokenizer.texts_to_sequences(texts)
         self.sentence_vec = pad_sequences(sequences, maxlen=config.MAX_SEQUENCE_LENGTH)
 
-        # 直接将每个句子表征成n-gram的词向量
-        self.embedded_sequences = np.zeros((len(sequences), config.MAX_SEQUENCE_LENGTH, config.EMBEDDING_DIM*3))
-        for j, s in enumerate(sequences):
-            ngramsSeq = np.zeros((config.MAX_SEQUENCE_LENGTH, config.EMBEDDING_DIM*3))
-            for i in range(len(s)):
-                tempWord = np.zeros(config.EMBEDDING_DIM)
-                wordBehind = np.zeros(config.EMBEDDING_DIM)
-                wordBefore = np.zeros(config.EMBEDDING_DIM)
-                try:
-                    tempWord = self.inputer.embedding_matrix[s[i]]
-                    if (i != len(s) - 1):
-                        wordBehind = self.inputer.embedding_matrix[s[i+1]]
-                    if (i != 0):
-                        wordBefore = self.inputer.embedding_matrix[s[i-1]]
-                except Exception as e:
-                    print(e)
-                ngramsSeq[i] = np.append(wordBefore, np.append(tempWord, wordBehind))
-            self.embedded_sequences[j] = ngramsSeq
-
         # 获取位置向量
         # 三维矩阵，每个句子对应一个二维矩阵，该二维矩阵是设计规则生成出来的，跟句子中的每个词都有关系
         self.position_vec = np.zeros((len(entityPosition_allSen), config.MAX_SEQUENCE_LENGTH, inputer.position_matrix.shape[1]*2))
+        self.dim_pos = inputer.position_matrix.shape[1]
+        self.e1Vec = []
+        self.e2Vec = []
         for i in range(len(entityPosition_allSen)):
             e1_position = entityPosition_allSen[i][0]
             e2_position = entityPosition_allSen[i][1]
+            s = sequences[i]
+            self.e1Vec.append(self.inputer.embedding_matrix[s[e1_position]])
+            self.e2Vec.append(self.inputer.embedding_matrix[s[e1_position]])
             sentence_posi_maxtrix = np.zeros((config.MAX_SEQUENCE_LENGTH, inputer.position_matrix.shape[1]*2))
             tokens = list(map(lambda x: x[0], wordPairList_allSen[i]))
             for j in range(len(tokens)):
@@ -237,6 +230,38 @@ class SentencesVector(object):
                 word_position_matrix = np.append(e1_pv, e2_pv)
                 sentence_posi_maxtrix[-len(tokens) + j] = word_position_matrix
             self.position_vec[i] = sentence_posi_maxtrix
+        self.e1Vec = np.array(self.e1Vec)
+        self.e2Vec = np.array(self.e2Vec)
+
+        # 直接将每个句子表征成n-gram的词向量，这里没有加位置向量，本机跑内存容易不够，而且在网络的嵌入层嵌入位置向量应该也一样
+        self.embedded_sequences = np.zeros((len(sequences), config.MAX_SEQUENCE_LENGTH, config.EMBEDDING_DIM * config.n_gram_size))
+        for j, s in enumerate(sequences):
+            ngramSeq = np.zeros((config.MAX_SEQUENCE_LENGTH, config.EMBEDDING_DIM * config.n_gram_size))
+            for i in range(len(s)):
+                beforeWord = []
+                behindWord = []
+                before = config.n_gram_size // 2
+                behind = config.n_gram_size - before - 1
+                curWord = self.inputer.embedding_matrix[s[i]]
+                tempWord = np.zeros(config.EMBEDDING_DIM)
+                for w in range(before):
+                    tempWord = np.zeros(config.EMBEDDING_DIM)
+                    try:
+                        if i - before + w >= 0:
+                            tempWord = self.inputer.embedding_matrix[s[i -before + w]]
+                        beforeWord = np.append(beforeWord, tempWord)
+                    except Exception as e:
+                        print(e)
+                for w in range(behind):
+                    tempWord = np.zeros(config.EMBEDDING_DIM)
+                    try:
+                        if i + w < config.MAX_SEQUENCE_LENGTH:
+                            tempWord = self.inputer.embedding_matrix[s[i + w]]
+                        behindWord = np.append(tempWord, behindWord)
+                    except Exception as e:
+                        print(e)
+                ngramSeq[i] = np.append(np.append(beforeWord, curWord), behindWord)
+            self.embedded_sequences[j] = ngramSeq
 
         # 获取词性向量
         # from tw_word2vec.cnn_input_zh import all_pos_list
