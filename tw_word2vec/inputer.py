@@ -29,6 +29,7 @@ class Configuration(object):
                  types_file_path="../data/relations_zh.txt",
                  corpus_file_path="../data/train_zh.txt",
                  model_file_path="../data/model/re_zh_model.lstm.hdf5",
+                 n_gram_size=1,
                  ) -> None:
         self.word_segmentor = word_segmentor
         self.MAX_NB_WORDS = MAX_NB_WORDS
@@ -40,6 +41,7 @@ class Configuration(object):
         self.types_file_path = types_file_path
         self.corpus_file_path = corpus_file_path
         self.model_file_path = model_file_path
+        self.n_gram_size = n_gram_size
 
 
 class Inputer(object):
@@ -51,6 +53,8 @@ class Inputer(object):
         self.MAX_SEQUENCE_LENGTH = config.MAX_SEQUENCE_LENGTH
         self.EMBEDDING_DIM = config.EMBEDDING_DIM
         self.MAX_NB_WORDS = config.MAX_NB_WORDS
+        self.n_gram_size = config.n_gram_size
+        self.vector = []
         if not os.path.isfile(config.position_matrix_file_path):
             position_matrix = np.random.randn(config.MAX_SEQUENCE_LENGTH, 20)
             np.save(config.position_matrix_file_path[0:-4], position_matrix)
@@ -62,22 +66,29 @@ class Inputer(object):
         default_model = tw_w2v.get_word2vec_dic(config.word2vec_file_path)
         self.tokenizer = Tokenizer(num_words=config.MAX_NB_WORDS)  #
         words = None
-        if isinstance(default_model,dict):
+        if isinstance(default_model, dict):
             words = default_model.keys()
         else:
-            words =  default_model.vocab.keys()
+            words = default_model.vocab.keys()
 
         self.tokenizer.fit_on_texts(words)
         word_index = self.tokenizer.word_index
         self.num_words = min(config.MAX_NB_WORDS, len(word_index)+1)
-        ##初始化词向量，词向量矩阵 ： 50000*64
+        ##初始化词向量矩阵
         model_dim =0
-        for key in default_model:
-            model_dim = default_model[key].shape[0]
-            break
+        if self.config.word2vec_file_path.endswith(".bin") and "zh" in self.config.word2vec_file_path:
+            model_dim = default_model["的"].shape[0]
+        elif self.config.word2vec_file_path.endswith(".bin"):
+            model_dim = default_model["men"].shape[0]
+        else:
+            for key in default_model:
+                model_dim = default_model[key].shape[0]
+                if default_model[key].shape[0] == 1:
+                    model_dim = default_model[key].shape[1]
+                break
         if self.EMBEDDING_DIM != model_dim:
             print("WARN ! 设置的词向量与读取维数不同，默认采用读取的词向量维数。", self.EMBEDDING_DIM, model_dim)
-            self.EMBEDDING_DIM =model_dim
+            self.EMBEDDING_DIM = model_dim
             config.EMBEDDING_DIM = model_dim
         self.embedding_matrix = np.zeros((self.num_words, config.EMBEDDING_DIM))
         for word, i in word_index.items():
@@ -92,9 +103,10 @@ class Inputer(object):
                     print(e)
             else:
                 print("warn! ",word,"不在词向量列表")
+
         print("词向量矩阵的大小",self.embedding_matrix.shape)
 
-        ##初始化词性标注List
+        ##初始化词性标注List,也是为了原有的pos_list避免出现训练集中有的词性但pos_list中没有
         self.POS_list = []
         if os.path.exists(config.POS_list_file_path):
             with open(config.POS_list_file_path, encoding="UTF-8") as f:
@@ -122,11 +134,13 @@ class Inputer(object):
                     f.write("\n")
         print("POS类型", len(self.POS_list))
 
-        ##关系种类，RelationWordAdmin有relations和relation_word_dic
-        self.relationWordAdmin = RelationWordAdmin(config.types_file_path);
+        ##关系种类，RelationWordAdmin有relations和relation_word_dic，这步是为了得到所有的分类，为后面化成one-hot向量做准备
+        self.relationWordAdmin = RelationWordAdmin(config.types_file_path)
         self.types = self.relationWordAdmin.relations
         print("分类类型", len(self.types))
-
+        # 如果模型不存在，需要训练模型的话，在这里直接把数据给读了
+        if not os.path.exists(config.model_file_path):
+            self.vector = self.getSentenceVectorFromFile(config.corpus_file_path)
 
     def getWordEmbedding(self):
         embedding_layer = Embedding(self.num_words,  # 词个数
@@ -191,7 +205,7 @@ class SentencesVector(object):
         #     wordPairList_allSen = wordPairList_allSen[-config.MAX_SEQUENCE_LENGTH:]
         #     entityPosition_allSen = entityPosition_allSen[-config.MAX_SEQUENCE_LENGTH:]
         # 获取句子向量
-        #     获取每个句子（去掉标点）
+        #     获取每个句子（用空格连接）
         texts = list(map(lambda pair: reduce(lambda x, y: x + y, map(lambda x: x[0] + " ", pair)), wordPairList_allSen))
         sequences = inputer.tokenizer.texts_to_sequences(texts)
         self.sentence_vec = pad_sequences(sequences, maxlen=config.MAX_SEQUENCE_LENGTH)
@@ -199,9 +213,15 @@ class SentencesVector(object):
         # 获取位置向量
         # 三维矩阵，每个句子对应一个二维矩阵，该二维矩阵是设计规则生成出来的，跟句子中的每个词都有关系
         self.position_vec = np.zeros((len(entityPosition_allSen), config.MAX_SEQUENCE_LENGTH, inputer.position_matrix.shape[1]*2))
+        self.dim_pos = inputer.position_matrix.shape[1]
+        self.e1Vec = []
+        self.e2Vec = []
         for i in range(len(entityPosition_allSen)):
             e1_position = entityPosition_allSen[i][0]
             e2_position = entityPosition_allSen[i][1]
+            s = sequences[i]
+            self.e1Vec.append(self.inputer.embedding_matrix[s[e1_position]])
+            self.e2Vec.append(self.inputer.embedding_matrix[s[e1_position]])
             sentence_posi_maxtrix = np.zeros((config.MAX_SEQUENCE_LENGTH, inputer.position_matrix.shape[1]*2))
             tokens = list(map(lambda x: x[0], wordPairList_allSen[i]))
             for j in range(len(tokens)):
@@ -209,7 +229,39 @@ class SentencesVector(object):
                 e2_pv = inputer.position_matrix[j - e2_position]
                 word_position_matrix = np.append(e1_pv, e2_pv)
                 sentence_posi_maxtrix[-len(tokens) + j] = word_position_matrix
-            self.position_vec[i:] = sentence_posi_maxtrix
+            self.position_vec[i] = sentence_posi_maxtrix
+        self.e1Vec = np.array(self.e1Vec)
+        self.e2Vec = np.array(self.e2Vec)
+
+        # 直接将每个句子表征成n-gram的词向量，这里没有加位置向量，本机跑内存容易不够，而且在网络的嵌入层嵌入位置向量应该也一样
+        self.embedded_sequences = np.zeros((len(sequences), config.MAX_SEQUENCE_LENGTH, config.EMBEDDING_DIM * config.n_gram_size))
+        for j, s in enumerate(sequences):
+            ngramSeq = np.zeros((config.MAX_SEQUENCE_LENGTH, config.EMBEDDING_DIM * config.n_gram_size))
+            for i in range(len(s)):
+                beforeWord = []
+                behindWord = []
+                before = config.n_gram_size // 2
+                behind = config.n_gram_size - before - 1
+                curWord = self.inputer.embedding_matrix[s[i]]
+                tempWord = np.zeros(config.EMBEDDING_DIM)
+                for w in range(before):
+                    tempWord = np.zeros(config.EMBEDDING_DIM)
+                    try:
+                        if i - before + w >= 0:
+                            tempWord = self.inputer.embedding_matrix[s[i -before + w]]
+                        beforeWord = np.append(beforeWord, tempWord)
+                    except Exception as e:
+                        print(e)
+                for w in range(behind):
+                    tempWord = np.zeros(config.EMBEDDING_DIM)
+                    try:
+                        if i + w < config.MAX_SEQUENCE_LENGTH:
+                            tempWord = self.inputer.embedding_matrix[s[i + w]]
+                        behindWord = np.append(tempWord, behindWord)
+                    except Exception as e:
+                        print(e)
+                ngramSeq[i] = np.append(np.append(beforeWord, curWord), behindWord)
+            self.embedded_sequences[j] = ngramSeq
 
         # 获取词性向量
         # from tw_word2vec.cnn_input_zh import all_pos_list
@@ -227,7 +279,6 @@ class SentencesVector(object):
         # 获取词性向量，先把词、跟词性的元组对的词性部分换成词性在all_pos中的索引，再把索引变成one-hot向量
         # 三维矩阵，每个句子的每个词都有一个one-hot向量表示词性
         all_pos = list(inputer.POS_list)
-        print("all_pos:" + str(len(all_pos)))
         self.pos_vec = np.zeros((len(wordPairList_allSen), config.MAX_SEQUENCE_LENGTH, len(all_pos)))
         for i in range(len(wordPairList_allSen)):
             def getPosIndex(x):
@@ -241,7 +292,7 @@ class SentencesVector(object):
             pos_matrix = to_categorical(pos_y, len(all_pos))
             pos_matrix_all = np.zeros((config.MAX_SEQUENCE_LENGTH, len(all_pos)))
             pos_matrix_all[-len(pos_matrix):] = pos_matrix
-            self.pos_vec[i:] = pos_matrix_all
+            self.pos_vec[i] = pos_matrix_all
         # 这是relation的分类矩阵
         # 跟对pos，posi的处理一样，最后得到的是一个二维矩阵，每个句子对应一个One-hot向量
         if classifications_all != None:

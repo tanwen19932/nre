@@ -67,3 +67,6 @@ class BiLstmTrainer():
                   # validation_data=({'sequence_input': x_test, 'posi_input': x_test_posi}, y_test),
                   callbacks=callbacks_list)
         return model
+
+if __name__ == "__main__":
+    b = BiLstmTrainer()

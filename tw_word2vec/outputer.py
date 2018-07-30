@@ -6,6 +6,7 @@
 # @Desc  :
 from tw_word2vec.inputer import SentencesVector
 from tw_word2vec.lstm_trainer_zh import LstmTrainer
+import numpy as np
 
 
 class Outputer(object):
@@ -14,6 +15,19 @@ class Outputer(object):
         if not hasattr(trainer, "train"):
             raise Exception("传入文件不包含 train 方法")
         self.trainer = trainer
+
+    def getEvaluation(self, testType):
+        vector = self.inputer.getSentenceVectorFromFile("../data/test_en.txt")
+        classVector = np.eye(vector.classifications_vec.shape)
+        print(classVector.shape)
+        if testType == "CNN":
+            score = self.trainer.model.evaluate(
+                {'sequence_input': vector.embedded_sequences, 'posi_input': vector.position_vec,
+                 'typeInput': classVector}, vector.classifications_vec, batch_size=128)
+        else:
+            score = self.trainer.model.evaluate({'sequence_input': vector.embedded_sequences}, vector.classifications_vec, batch_size=128)
+        print("Test loss:", score[0])
+        print("Test accuracy:", score[1])
 
     def getSentenceRelation(self,predict_texts: list, predict_types):
         relations = []
@@ -28,7 +42,7 @@ class Outputer(object):
                 relations.append("未知")
         return relations
 
-    def getDescription(self,predict_texts: list):
+    def getDescription(self,predict_texts: list, testType):
         pairs_all = []
         position_all = []
         sentences = []
@@ -42,8 +56,11 @@ class Outputer(object):
             except:
                 print(sentence)
                 pass
-        predict_types = self.trainer.predict(SentencesVector(self.inputer,wordPairList_allSen=pairs_all, entityPosition_allSen=position_all))
-        predict_details = self.inputer.relationWordAdmin.getRelationDetail(pairs_all,position_all,predict_types)
+        if testType == "CNN":
+            predict_types = self.trainer.predict(SentencesVector(self.inputer, wordPairList_allSen=pairs_all, entityPosition_allSen=position_all))
+        else:
+            predict_types = self.trainer.predict(SentencesVector(self.inputer, wordPairList_allSen=pairs_all, entityPosition_allSen=position_all))
+        predict_details = self.inputer.relationWordAdmin.getRelationDetail(pairs_all, position_all, predict_types)
         result = []
         for i in range(len(position_all)):
             entity1 = pairs_all[i][position_all[i][0]]

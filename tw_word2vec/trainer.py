@@ -13,20 +13,22 @@ from tw_word2vec.bilstm_trainer_zh import BiLstmTrainer
 from tw_word2vec.inputer import Inputer, Configuration, SentencesVector
 from tw_word2vec.lstm_trainer_zh import LstmTrainer
 from tw_word2vec.outputer import Outputer
-
+import numpy as np
+from ltl_pytorch import ACNN_trainer
 
 class Trainer(object):
-    def __init__(self, inputer: Inputer, modelTrainer: object) -> object:
+    def __init__(self, inputer: Inputer, testType) -> object:
         self.config = inputer.config
         self.inputer = inputer
-        self.modelTrainer = modelTrainer
         config = self.config
         if not os.path.exists(config.model_file_path):
-            vector = inputer.getSentenceVectorFromFile(config.corpus_file_path)
-            print("句子向量矩阵的shape" + str(vector.sentence_vec.shape)) #(346, 100)
-            print("位置向量矩阵的shape" + str(vector.position_vec.shape)) # (346, 100, 40)
-            print("词性向量矩阵的shape" + str(vector.pos_vec.shape)) # (346, 100, 84)
-            print("关系分类矩阵的shape" + str(vector.classifications_vec.shape)) # (346, 21)
+            vector = self.inputer.vector
+            print("句子向量矩阵的shape" + str(vector.sentence_vec.shape))
+            print("位置向量矩阵的shape" + str(vector.position_vec.shape))
+            print("词性向量矩阵的shape" + str(vector.pos_vec.shape))
+            print("关系分类矩阵的shape" + str(vector.classifications_vec.shape))
+            if testType == "CNN":
+                self.modelTrainer = ACNN_trainer(vector)
             self.model = self.train(vector)
             self.model.save(config.model_file_path)
         self.model = load_model(config.model_file_path)
@@ -36,16 +38,18 @@ class Trainer(object):
 
 
     def predict(self, sentence_vector: SentencesVector):
+        classVector = np.ones(sentence_vector.classifications_vec.shape)
         prop = self.model.predict(
-            {'sequence_input': sentence_vector.sentence_vec, 'posi_input': sentence_vector.position_vec,
-             'pos_input': sentence_vector.pos_vec})
+            {'sequence_input': sentence_vector.embedded_sequences,
+             "posi_input" : sentence_vector.position_vec,
+             "typeInput" : classVector})
         return sentence_vector.prop2index(prop)
 
 
 if __name__ == '__main__':
     config = Configuration(
         position_matrix_file_path="../data/posi_matrix.npy",
-        word2vec_file_path="../data/needed_zh_word2vec.pkl",
+        word2vec_file_path="../data/needed_zh_word2vec.bin",
         POS_list_file_path="../data/military/pos_list.txt",
         types_file_path="../data/military/relations_zh.txt",
         corpus_file_path="../data/military/train_zh.txt",
