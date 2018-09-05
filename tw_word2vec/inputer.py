@@ -138,7 +138,6 @@ class Inputer(object):
         self.relationWordAdmin = RelationWordAdmin(config.types_file_path)
         self.types = self.relationWordAdmin.relations
         print("分类类型", len(self.types))
-
         # 如果模型不存在，需要训练模型的话，在这里直接把数据给读了
         if not os.path.exists(config.model_file_path):
             self.vector = self.getSentenceVectorFromFile(config.corpus_file_path)
