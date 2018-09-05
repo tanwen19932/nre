@@ -18,14 +18,14 @@ from tw_word2vec.inputer import SentencesVector, Configuration, Inputer
 from tw_word2vec.outputer import Outputer
 from tw_word2vec.trainer import Trainer
 from tw_word2vec.bilstm_attention_trainer import BiLstmAttentionTrainer
-from ltl_pytorch import ACNN_trainer
+# from ltl_pytorch import ACNN_trainer
 
 
 
 class CnnTrainerEn():
     def train(self, sentences_vector: SentencesVector):
         inputer = sentences_vector.inputer
-        config = inputer.config
+        config = inputer.configcn
         embedded_sequences = Input(shape=(config.MAX_SEQUENCE_LENGTH, config.EMBEDDING_DIM*3), dtype='float32',
                                name="sequence_input")  # 100*1最多100个词组成输入
         # embedded_sequences = inputer.getWordEmbedding()(sequence_input)  # 句子转为向量矩阵 训练集大小*100*300维
@@ -78,18 +78,18 @@ if __name__ == '__main__':
     config = Configuration(
         word_segmentor=EnSegmentor(),
         EMBEDDING_DIM=300,
-        position_matrix_file_path="../data/posi_matrix.npy",
-        word2vec_file_path="../data/needed_word2vec.pkl",
-        POS_list_file_path="../data/pos_list.txt",
-        types_file_path="../data/relations_en.txt",
-        corpus_file_path="../data/train_en.txt",
-        model_file_path="../data/model/re_sem_eval_en_model_" + testType + ".hdf5",
+        position_matrix_file_path="data/posi_matrix.npy",
+        word2vec_file_path="data/needed_word2vec.pkl",
+        POS_list_file_path="data/pos_list.txt",
+        types_file_path="data/relations_en.txt",
+        corpus_file_path="data/train_en.txt",
+        model_file_path="data/model/re_sem_eval_en_model_" + testType + ".hdf5",
         n_gram_size=1,
     )
     inputer = Inputer(config)
     trainer = Trainer(inputer, testType)
     outputer = Outputer(trainer)
-    outputer.getEvaluation(testType)
+    # outputer.getEvaluation(testType)
     predict_texts = [" <e1>level</e1> of experience has already been mentioned in the previous <e2>chapter</e2>.",
                      " <e1>level</e1> of experience has already been mentioned in the previous <e2>chapter</e2>."]
     import json

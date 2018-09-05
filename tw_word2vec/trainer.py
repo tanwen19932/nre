@@ -14,7 +14,8 @@ from tw_word2vec.inputer import Inputer, Configuration, SentencesVector
 from tw_word2vec.lstm_trainer_zh import LstmTrainer
 from tw_word2vec.outputer import Outputer
 import numpy as np
-from ltl_pytorch import ACNN_trainer
+# from ltl_pytorch import ACNN_trainer
+from tw_word2vec.bilstm_attention_trainer import BiLstmAttentionTrainer
 
 class Trainer(object):
     def __init__(self, inputer: Inputer, testType) -> object:
@@ -28,13 +29,14 @@ class Trainer(object):
             print("词性向量矩阵的shape" + str(vector.pos_vec.shape))
             print("关系分类矩阵的shape" + str(vector.classifications_vec.shape))
             if testType == "CNN":
-                self.modelTrainer = ACNN_trainer(vector)
-            self.model = self.train(vector)
+                pass
+            self.modelTrainer = BiLstmAttentionTrainer(vector)
+            self.model = self.train()
             self.model.save(config.model_file_path)
         self.model = load_model(config.model_file_path)
 
-    def train(self, sentence_vector: SentencesVector):
-        return self.modelTrainer.train(sentence_vector)
+    def train(self):
+        return self.modelTrainer.train()
 
 
     def predict(self, sentence_vector: SentencesVector):
