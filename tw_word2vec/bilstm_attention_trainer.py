@@ -13,17 +13,45 @@ from keras.layers import Dense, Input, Bidirectional, LSTM, merge
 from keras.layers.core import *
 from keras.models import *
 
+from keras.callbacks import Callback
+from sklearn.metrics import f1_score, precision_score, recall_score
+
 from keras import backend as K
 
 from tw_word2vec.inputer import SentencesVector
-from tw_word2vec.metric import Metrics
 
 from tw_word2vec.attention_utils import get_activations, get_data_recurrent
 # if True, the attention vector is shared across the input_dimensions where the attention is applied.
 SINGLE_ATTENTION_VECTOR = False
 APPLY_ATTENTION_BEFORE_LSTM = False
 
+
+class Metrics(Callback):
+    def on_train_begin(self, logs={}):
+        self.val_f1s = []
+        self.val_recalls = []
+        self.val_precisions = []
+
+    def on_epoch_end(self, epoch, logs={}):
+        val_predict = (np.asarray(self.model.predict(
+            self.validation_data[0]))).round()
+        val_targ = self.validation_data[1]
+        _val_f1 = f1_score(val_targ, val_predict, average="macro")
+        _val_recall = recall_score(val_targ, val_predict, average="macro")
+        _val_precision = precision_score(val_targ, val_predict, average="macro")
+        self.val_f1s.append(_val_f1)
+        self.val_recalls.append(_val_recall)
+        self.val_precisions.append(_val_precision)
+        print("val_f1:" + str(_val_f1) + ";   val_recall:" + str(_val_recall) + ";   val_precision:" + str(_val_precision))
+        print("MAX val_f1:" + str(max(self.val_f1s)) + ";   MAX val_recall:" + str(max(self.val_recalls)) + ";   MAX val_precision:" + str(
+            max(self.val_precisions)))
+        return
+
 class BiLstmAttentionTrainer():
+
+    def __init__(self, sentences_vector: SentencesVector):
+        self.sentences_vector = sentences_vector
+
     # 这个新实现的Attention的参照论文是Attention-Based Bidirectional Long Short-Term Memory Network for Relation Extraction
     def newAttention(self, inputs, seqLength=100):
         # tanh激活，该层输出维度t * d
@@ -58,6 +86,7 @@ class BiLstmAttentionTrainer():
         output_attention = Flatten()(output_attention_mul)
         return output_attention
 
+
     def buildModel(self, seqLength=100, embeddingDim=300, postionShape2=20, n_gram_size=3, types=19):
         # 获得输入的嵌入向量
         embedded_sequences = Input(shape=(seqLength, embeddingDim * n_gram_size), dtype='float32',
@@ -86,13 +115,13 @@ class BiLstmAttentionTrainer():
         return model
 
 
-    def train(self, sentences_vector: SentencesVector):
+    def train(self):
         print("构建模型")
-        self.inputer = sentences_vector.inputer
+        self.inputer = self.sentences_vector.inputer
         self.config = self.inputer.config
 
         model = self.buildModel(seqLength=self.config.MAX_SEQUENCE_LENGTH, embeddingDim=self.config.EMBEDDING_DIM,
-                                postionShape2=sentences_vector.position_vec.shape[2], n_gram_size=self.config.n_gram_size,
+                                postionShape2=self.sentences_vector.position_vec.shape[2], n_gram_size=self.config.n_gram_size,
                                 types=len(self.inputer.types))
 
         # 优化器
@@ -108,19 +137,19 @@ class BiLstmAttentionTrainer():
         #               metrics=["categorical_accuracy"])
         # 训练
         # ModelCheckpoint回调函数将在每个epoch后保存模型到filepath，当save_best_only=True保存验证集误差最小的参数
-        checkpoint = ModelCheckpoint(self.config.model_file_path, monitor='val_acc', verbose=1, mode='max', save_best_only= True)
+        checkpoint = ModelCheckpoint(self.config.model_file_path, monitor='val_categorical_accuracy', verbose=1, mode='max', save_best_only= True)
         # 当监测值不再改善时，该回调函数将中止训练
-        early = EarlyStopping(monitor="val_categorical_accuracy", mode="min", patience=500)
-        metrics = Metrics(sentences_vector)
+        early = EarlyStopping(monitor="val_categorical_accuracy", mode="max", patience=500)
+        metrics = Metrics()
         # 开始训练
-        callbacks_list = [checkpoint, early]  # early
+        callbacks_list = [metrics, checkpoint, early]  # early
         # And trained it via:
-        hist = model.fit({'sequence_input': sentences_vector.embedded_sequences},
-                  sentences_vector.classifications_vec,
+        hist = model.fit({'sequence_input': self.sentences_vector.embedded_sequences},
+                  self.sentences_vector.classifications_vec,
                   batch_size=200,
                   epochs=3000,
                   validation_split=0.2,
-                  # validation_data=({'sequence_input': x_test, 'posi_input': x_test_posi}, y_test),
+                  # validation_data=({'seqcnnuence_input': x_test, 'posi_input': x_test_posi}, y_test),
                   callbacks=callbacks_list)
         with open('history.txt', 'w') as f:
             f.write(str(hist.history))

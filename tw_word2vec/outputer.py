@@ -17,7 +17,7 @@ class Outputer(object):
         self.trainer = trainer
 
     def getEvaluation(self, testType):
-        vector = self.inputer.getSentenceVectorFromFile("../data/test_en.txt")
+        vector = self.inputer.getSentenceVectorFromFile("data/test_en.txt")
         classVector = np.eye(vector.classifications_vec.shape)
         print(classVector.shape)
         if testType == "CNN":
