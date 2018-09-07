@@ -6,7 +6,7 @@
 # @Desc  :
 from pprint import pprint
 
-from pyhanlp import AttachJVMWrapper
+from pyhanlp import *
 
 from tw_segment.jieba_seg import *
 
@@ -14,6 +14,7 @@ ZH_RELATION_PATH = "../data/relations_zh"
 EN_RELATION_PATH = "../data/relations_en"
 
 segmentor = JieBaTokenizer()
+
 
 def getFileLines(file_path):
     result = []
@@ -34,14 +35,14 @@ def getRelationWord(relation):
 
 
 class RelationWordAdmin(object):
-    def __init__(self,relation_path) -> None:
+    def __init__(self, relation_path) -> None:
         self.relations = getFileLines(relation_path)
         self.relation_word_dic = {}
         for relation in self.relations:
             self.relation_word_dic[relation] = getRelationWord(relation)
         # print(self.relation_word_dic)
 
-    def getRelationDetail(self, paris_all, position_all,predict_types):
+    def getRelationDetail(self, paris_all, position_all, predict_types):
         detail = []
         for i in range(len(position_all)):
             pos = position_all[i]
@@ -56,21 +57,20 @@ class RelationWordAdmin(object):
             #         detail.append(pair.word)
             #         is_add=True
             #         break
-            for pair in paris_all[i][pos[0]+1:pos[1]]:
+            for pair in paris_all[i][pos[0] + 1:pos[1]]:
                 # print(pair)
                 # print(self.relation_word_dic)
                 if pair[0] in self.relation_word_dic[predict_type]:
                     detail.append(pair[0])
-                    is_add=True
+                    is_add = True
                     break
             if not is_add:
                 detail.append("")
         return detail
 
+
 relation_admin_zh = RelationWordAdmin(ZH_RELATION_PATH)
 relation_admin_en = RelationWordAdmin(EN_RELATION_PATH)
-
-
 
 
 def generateRelationWord(sentence_list: list) -> list:
@@ -87,11 +87,9 @@ def generateRelationWord(sentence_list: list) -> list:
     # print(hdp_word)
     # print(parse_word)
     for word_value in hdp_word:
-        if(parse_word.__contains__(word_value[0])):
+        if (parse_word.__contains__(word_value[0])):
             result_word.append(word_value[0])
     return result_word
-
-
 
 
 def getRelationDetailByHDP(sentence_list):
@@ -116,7 +114,7 @@ def getRelationDetailByHDP(sentence_list):
     words = {}
     for topic in a:
         word_details = str(topic[1]).split(" + ")
-        for  word_detail in word_details:
+        for word_detail in word_details:
             word = str(word_detail[word_detail.index("*") + 1:])
             num = float(str(word_detail[:word_detail.index("*")]))
             if not (words.__contains__(word)):
@@ -133,8 +131,8 @@ def getRelationDetailByParse(sentence_list):
     pairs_all, position_all = segmentor.segListWithNerTag(sentence_list)
     import jpype
     Term = jpype.JClass("com.hankcs.hanlp.seg.common.Term")
-    Nature = AttachJVMWrapper("com.hankcs.hanlp.corpus.tag.Nature")
-    NeuralNetworkDependencyParser = AttachJVMWrapper(
+    Nature = LazyLoadingJClass("com.hankcs.hanlp.corpus.tag.Nature")
+    NeuralNetworkDependencyParser = LazyLoadingJClass(
         "com.hankcs.hanlp.dependency.nnparser.NeuralNetworkDependencyParser")
     stopwords = set()
     with open("../data/dic/stopwords") as f:
@@ -191,23 +189,25 @@ def getRelationDetailByParse(sentence_list):
         relations_detail.append(result.strip())
     return relations_detail
 
-def saveRelationWord(relation,words):
+
+def saveRelationWord(relation, words):
     result = []
     try:
         with open("../data/relation/" + relation + ".txt", "w") as f:
             for word in words:
-                f.write(word+"\n")
+                f.write(word + "\n")
     except:
         pass
     return result
+
 
 if __name__ == '__main__':
     # pprint(relations_en)
     relation_admin = relation_admin_zh
 
-    if relation_admin.relation_word_dic.__len__()==0:
+    if relation_admin.relation_word_dic.__len__() == 0:
         class_corpus = {}
-        with open("../data/train_zh.txt", "r",encoding="UTF-8") as f:
+        with open("../data/train_zh.txt", "r", encoding="UTF-8") as f:
             for line in f.readlines():
                 line = line.strip()
                 classification = line.split("|")[0].strip()
@@ -217,6 +217,6 @@ if __name__ == '__main__':
                 if (len(sentence) > 0):
                     class_corpus[classification].append(sentence)
         for classification in class_corpus.keys():
-            result =  generateRelationWord(class_corpus[classification])
-            print(classification,result)
-            saveRelationWord(classification,result)
+            result = generateRelationWord(class_corpus[classification])
+            print(classification, result)
+            saveRelationWord(classification, result)
