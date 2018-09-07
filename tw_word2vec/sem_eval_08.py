@@ -78,13 +78,12 @@ if __name__ == '__main__':
     config = Configuration(
         word_segmentor=EnSegmentor(),
         EMBEDDING_DIM=300,
-        position_matrix_file_path="data/posi_matrix.npy",
-        word2vec_file_path="data/needed_word2vec.pkl",
-        POS_list_file_path="data/pos_list.txt",
-        types_file_path="data/relations_en.txt",
-        corpus_file_path="data/train_en.txt",
-        model_file_path="data/model/re_sem_eval_en_model_" + testType + ".hdf5",
-        n_gram_size=1,
+        position_matrix_file_path="../data/posi_matrix.npy",
+        word2vec_file_path="../data/needed_word2vec.pkl",
+        POS_list_file_path="../data/pos_list.txt",
+        types_file_path="../data/relations_en.txt",
+        corpus_file_path="../data/train_en.txt",
+        model_file_path="../data/model/re_sem_eval_en_model.cnn.hdf5",
     )
     inputer = Inputer(config)
     trainer = Trainer(inputer, testType)

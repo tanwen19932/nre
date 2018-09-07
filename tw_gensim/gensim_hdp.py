@@ -8,8 +8,8 @@ from gensim import corpora
 from gensim.models import HdpModel
 
 import tw_word2vec.word2vec as tw_w2v
-from tw_segment import jiebaseg
 
+jiebaseg = JieBaTokenizer()
 default_model: dict = tw_w2v.get_word2vec_dic("../data/needed_zh_word2vec.bin")
 keys = list(default_model.keys())
 dictionary = corpora.Dictionary(keys)
