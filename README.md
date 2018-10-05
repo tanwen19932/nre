@@ -103,7 +103,7 @@ GoogleNews-vectors-negative300.bin
 工具-代理(e2,e1)|\<per>阿拉法特\</per>乘\<instrument>飞机\</instrument>抵达巴黎  
 工具-代理(e2,e1)|\<per>雷军\</per>乘\<instrument>出租车\</instrument>回家  
 工具-代理(e2,e1)|\<per>牙医\</per>使用\<instrument>电钻\</instrument>对牙齿进行修复  
-起因-影响(e2,e1)|最近\<disease>流感</disease>\<bio>病毒</bio>爆发  
+起因-影响(e2,e1)|最近\<disease>流感\</disease>\<bio>病毒\</bio>爆发  
 起因-影响(e1,e2)|吸\<chemical>冰毒\</chemical>可能导致\<disease>死亡\</disease>  
 
 通过标签将实体区分出来。通过|分割关系类型和训练语料  
