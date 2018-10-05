@@ -46,9 +46,9 @@ if __name__ == '__main__':
     config = Configuration(
         position_matrix_file_path="../data/posi_matrix.npy",
         word2vec_file_path="../data/needed_zh_word2vec.pkl",
-        POS_list_file_path="../data/military/pos_list.txt",
-        types_file_path="../data/military/relations_zh.txt",
-        corpus_file_path="../data/military/train_zh.txt",
+        POS_list_file_path="../data/relation_military/pos_list.txt",
+        types_file_path="../data/relation_military/relations_zh.txt",
+        corpus_file_path="../data/relation_military/train_zh.txt",
         model_file_path="../data/model/re_military_zh_model.bilstm.hdf5",
     )
     inputer = Inputer(config)

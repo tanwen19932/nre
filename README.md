@@ -14,13 +14,16 @@ Neural Relation Extraction (NRE) with wechat API
 采用BiLSTM,LSTM模型和CNN模型两个版本
 代码中直接修改  
 中文启动见 trainer.py：
+``` shell
+localhost:tw_word2vec tw$ python trainer.py
+```
 ```python
     config = Configuration(
         position_matrix_file_path="../data/posi_matrix.npy",
         word2vec_file_path="../data/needed_zh_word2vec.pkl",
-        POS_list_file_path="../data/military/pos_list.txt",
-        types_file_path="../data/military/relations_zh.txt",
-        corpus_file_path="../data/military/train_zh.txt",
+        POS_list_file_path=relation_military,
+        types_file_path=relation_military,
+        corpus_file_path=relation_military,
         model_file_path="../data/model/re_military_zh_model.bilstm.hdf5",
     )
     inputer = Inputer(config)
@@ -32,6 +35,10 @@ Neural Relation Extraction (NRE) with wechat API
     print(json.dumps(outputer.getDescription(predict_texts), ensure_ascii=False))
 ```  
 英文启动见：tw_word2vec/sem_eval_08.py：
+``` shell
+cd 
+localhost:tw_word2vec tw$ python sem_eval_08.py
+```
 ```python
     config = Configuration(
         word_segmentor=EnSegmentor(),

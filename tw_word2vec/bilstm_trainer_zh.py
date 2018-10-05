@@ -41,7 +41,7 @@ class BiLstmTrainer():
                       activity_regularizer=regularizers.l1(0.01))(c1)  # softmax分类
         model = Model(inputs=[sequence_input, posi_input, pos_input], outputs=preds)
         print(model.summary())
-        input("continue?")
+        # input("continue?")
         # Learning rate 和 Learning rate decay，随着训练的进行，会慢慢减小learning rate
         adam = optimizers.Adam(lr=0.001)
         model.compile(loss='categorical_crossentropy',
