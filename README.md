@@ -15,6 +15,7 @@ Neural Relation Extraction (NRE) with wechat API
 代码中直接修改  
 中文启动见 trainer.py：
 ``` shell
+cd tw_word2vec
 localhost:tw_word2vec tw$ python trainer.py
 ```
 ```python
@@ -36,7 +37,7 @@ localhost:tw_word2vec tw$ python trainer.py
 ```  
 英文启动见：tw_word2vec/sem_eval_08.py：
 ``` shell
-cd 
+cd tw_word2vec
 localhost:tw_word2vec tw$ python sem_eval_08.py
 ```
 ```python
