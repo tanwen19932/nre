@@ -8,6 +8,14 @@ Neural Relation Extraction (NRE) with wechat API
 模型过于简单，采用更通用的网络模型
 尝试其他网络模型
 需要训练测试集准确率判断不够详细
+中文词向量  
+news_12g_baidubaike_20g_novel_90g_embedding_64.bin  
+链接:https://pan.baidu.com/s/12kh-sWvuyqMf0N8yIq18Vw  密码:vz78
+
+英文词向量  
+GoogleNews-vectors-negative300.bin  
+请自行百度搜索相关下载  
+整体特征为:词向量+词与实体的位置向量+词的词性作为特征输入
 
 # 1. 关系中文
 中文识别直接采用tw_word2vec/output_zh.py脚本执行
@@ -63,12 +71,6 @@ localhost:tw_word2vec tw$ python sem_eval_08.py
 
 
 修改具体的分类模型 如果模型不存在会先训练
-中文向量  
-news_12g_baidubaike_20g_novel_90g_embedding_64.bin  
-英文向量  
-GoogleNews-vectors-negative300.bin  
-请自行百度搜索相关下载  
-整体特征为:词向量+词与实体的位置向量+词的词性作为特征输入
 
 
 ## 关系类型：
