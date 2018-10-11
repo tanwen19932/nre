@@ -72,7 +72,7 @@ class Inputer(object):
         self.num_words = min(config.MAX_NB_WORDS, len(word_index)+1)
         ##初始化词向量，词向量矩阵 ： 50000*64
         model_dim =0
-        for key in default_model:
+        for key in words:
             model_dim = default_model[key].shape[0]
             break
         if self.EMBEDDING_DIM != model_dim:

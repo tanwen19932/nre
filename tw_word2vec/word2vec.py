@@ -13,7 +13,7 @@ class Word2VecHelpper(object):
     def __init__(self,filepath:str,isJson =True):
         import pickle
         f = open(filepath, 'rb')
-        if isJson or filepath.endswith(".pkl"):
+        if isJson and filepath.endswith(".pkl"):
             self.word2vec_model = {}
             self.word2vec_model = pickle.load(f)
         else:
