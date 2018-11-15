@@ -30,8 +30,8 @@ if __name__ == '__main__':
 
     print(json.dumps(outputer.getDescription(predict_texts), ensure_ascii=False))
     corpus = []
-    with open("../data/test_zh_marked.txt", "w") as wf:
-        with open("../data/test_zh_by_llc.txt", "r") as f:
+    with open("../data/test_zh_marked.txt", "w", encoding="UTF-8") as wf:
+        with open("../data/test_zh_by_llc.txt", "r", encoding="UTF-8") as f:
             for line in f.readlines():
                 corpus.append(line.strip())
                 if (len(corpus) >= 100):

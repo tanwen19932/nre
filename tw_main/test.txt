@@ -1,0 +1,92 @@
+位于(e2,e1)|<loc>南海</loc><loc>南沙群岛</loc>西礁
+位于(e2,e1)|<loc>南海</loc>南沙群岛<loc>西礁</loc>
+无关系(e1,e2)|南海<loc>南沙群岛</loc><loc>西礁</loc>
+无关系(e1,e2)|<loc>南海</loc>6万<per>渔民</per>上岸休渔
+到达(e1,e2)|<per>马蒂斯</per>访<loc>亚太</loc>剑指中国
+到达(e1,e2)|<army>中国空军</army>战巡<loc>南海</loc>
+无关系(e1,e2)|<loc>东海</loc><loc>南海</loc>建立四个监测站
+到达(e1,e2)|<army>中国空军</army>战机战巡<loc>南海</loc>
+到达(e1,e2)|<ship>辽宁舰</ship>赴<loc>南海</loc>是何用意
+位于(e2,e1)|<loc>南海</loc><loc>华阳礁</loc>：战风斗浪守国门
+无关系(e1,e2)|广东佛山—<loc>南海</loc>—<loc>南海</loc>体育馆
+无关系(e1,e2)|“<loc>东海</loc>没有鱼，我们只好去<loc>南海</loc>
+到达(e1,e2)|<ship>辽宁舰</ship>在<loc>南海</loc>继续实战演练
+到达(e1,e2)|<ship>美国战舰航母</ship>云集<loc>南海</loc>周边
+经过(e1,e2)|<army>中国空军</army>首次飞越<loc>巴士海峡</loc>
+位于(e2,e1)|“<loc>南海</loc>神鹰”救助2名受伤<per>渔民</per>
+到达(e1,e2)|<army>中国空军</army>远洋训练战巡<loc>南海</loc>
+到达(e1,e2)|<army>中国空军</army>多型战机战巡<loc>南海</loc>
+到达(e1,e2)|<ship>辽宁舰</ship>是否参加了<loc>南海</loc>演练
+无关系(e1,e2)|<loc>南海</loc>就是越南人所谓的“<loc>东海</loc>”
+无关系(e1,e2)|（3）<loc>南沙群岛</loc>(即今<loc>中沙群岛</loc>)
+无关系(e1,e2)|<loc>南海</loc>救助飞行队救助一名患病<per>渔民</per>
+无关系(e1,e2)|这是<loc>南海</loc>的共识，也是<loc>南海</loc>的回答
+无关系(e1,e2)|真可谓：<loc>南海</loc>问<loc>南海</loc>，东风借东风
+无关系(e1,e2)|支队于5日通过<loc>台湾</loc>海峡进入<loc>南海</loc>
+无关系(e1,e2)|<loc>南海</loc>休渔结束 南沙<ship>渔船</ship>出海
+无关系(e1,e2)|从<loc>东海</loc>到<loc>南海</loc> 保卫中国海疆领土
+无关系(e1,e2)|空军战巡<loc>南海</loc>、远程奔袭<loc>西太平洋</loc>
+到达(e1,e2)|外媒：<army>中国海军</army>在<loc>南海</loc>秀力量
+无关系(e1,e2)|威海<loc>南海</loc>新区：生态<loc>南海</loc> 鸟类家园
+属于(e2,e1)|<army>美国海军</army>只有283艘<ship>军舰</ship>
+位于(e2,e1)|中国轰6K<loc>南海</loc>首降为何选在<loc>永兴岛</loc>
+无关系(e1,e2)|<country>美国</country>在<loc>南海</loc>再出招
+到达(e1,e2)|美<ship>“卡尔文森”号</ship>再赴<loc>西太平洋</loc>
+无关系(e1,e2)|<country>中国</country>在<loc>南海</loc>搞扩张
+经过(e1,e2)|英国要派23级<ship>护卫舰</ship>途径<loc>南海</loc>
+无关系(e1,e2)|三亚位于<country>中国</country><loc>南海</loc>
+到达(e1,e2)|美媒：东盟希望<ship>美国军舰</ship>去<loc>南海</loc>
+无关系(e1,e2)|<loc>南海</loc>第一救助飞行队成功救助两<per>渔民</per>
+无关系(e1,e2)|<per>杜特尔特</per>未发出改变<loc>南海</loc>思维的信号
+无关系(e1,e2)|应对<country>中国</country><loc>南海</loc>维权
+到达(e1,e2)|资料照片<army>中国空军</army>战机战巡<loc>南海</loc>
+无关系(e1,e2)|<country>中国</country>使<loc>南海</loc>军事化
+无关系(e1,e2)|【<loc>南海</loc>填岛】中东、<loc>南海</loc>局势的感受
+到达(e1,e2)|<plane>轰-6K</plane><loc>南海</loc>巡逻更有威慑
+无关系(e1,e2)|<loc>东海</loc><loc>南海</loc>，海军新型战舰常态化巡航
+位于(e2,e1)|台军<loc>南海</loc><loc>太平岛</loc>实弹演习 越南抗议
+搁浅(e2,e1)|菲律宾已将在<loc>南海</loc>搁浅<ship>军舰</ship>拖走
+无关系(e1,e2)|越南国家主席<per>陈大光</per>与日本首相<per>安倍</per>
+无关系(e1,e2)|关键词 >> 海洋合作,<loc>亚太</loc>,<loc>南海</loc>
+无关系(e1,e2)|<per>杜特尔特</per>真准备好“为<loc>南海</loc>开战”了吗
+到达(e1,e2)|图为在<loc>南海海域</loc>活动的美海<ship>军舰</ship>艇
+无关系(e1,e2)|鼓浪屿遥对着<loc>台湾</loc>岛　<loc>台湾</loc>是我家乡　
+无关系(e1,e2)|<per>马蒂斯</per>访越南 惦记其面向<loc>南海</loc>海岸线
+到达(e1,e2)|<ship>“卡尔文森”号</ship>航母再赴<loc>西太平洋</loc>
+无关系(e1,e2)|<loc>南海</loc>分局：推动<loc>南海</loc>区海洋工作新发展
+无关系(e1,e2)|菲律宾总统<per>杜特尔特</per>和美国总统<per>特朗普</per>
+属于(e2,e1)|资料图：<army>中国海军</army><ship>辽宁舰</ship>航母
+无关系(e1,e2)|才闯<loc>东海</loc>又进<loc>南海</loc>，美军轰炸机很嚣张
+位于(e2,e1)|菲律宾军舰在中国<loc>南海</loc><loc>半月礁</loc>附近搁浅
+无关系(e1,e2)|<country>日本</country>又在<loc>南海</loc>搞事情
+到达(e1,e2)|<army>中国海军</army>将在<loc>南海</loc>举行实战化演练
+到达(e1,e2)|<army>中国空军</army>大机群远洋训练战巡<loc>南海</loc>
+到达(e1,e2)|资料照片 <army>中国空军</army>战机战巡<loc>南海</loc>
+无关系(e1,e2)|其中，<loc>南海</loc>124种、黄海<loc>东海</loc>17种
+搁浅(e2,e1)|菲律宾已将在<loc>南海</loc>搁浅的<ship>军舰</ship>拖走
+国籍(e2,e1)|<country>中国</country><per>渔民</per>向称弄鼻仔
+无关系(e1,e2)|<country>美国</country>要在<loc>南海</loc>“造岛”
+到达(e1,e2)|资料图：<army>中国海军</army>新型战舰驰骋<loc>南海</loc>
+到达(e1,e2)|美菲关切<army>中国空军</army>在<loc>南海</loc>岛礁起降轰
+无关系(e1,e2)|此外，<per>陈大光</per>将与日本首相<per>安倍</per>举行会谈
+无关系(e1,e2)|<country>中国</country>已在<loc>南海</loc>部署导弹
+无关系(e1,e2)|湛江市<ship>渔船</ship>、<per>渔民</per>按照有关规定休渔
+无关系(e1,e2)|<per>马蒂斯</per>访亚太剑指<country>中国</country>
+无关系(e1,e2)|马蒂斯访<loc>亚太</loc>剑指<country>中国</country>
+位于(e2,e1)|来源：<country>中国</country><loc>南海</loc>新闻网
+无关系(e1,e2)|<country>中国</country>在<loc>南海</loc>又有新动作
+无关系(e1,e2)|<loc>南海</loc>第一救助飞行队成功救助1受伤<per>渔民</per>
+位于(e1,e2)|<loc>西沙群岛</loc>，中国<loc>南海</loc>陆地面积最大的群岛
+无关系(e1,e2)|<loc>台湾</loc>学者：<loc>南海</loc>周边各国可在多方面合作
+到达(e1,e2)|<ship>美国军舰</ship>航母云集<loc>南海</loc>周边，要干啥
+到达(e1,e2)|叫嚣要巡航<loc>南海</loc>英<ship>护卫舰</ship>返回地中海
+无关系(e1,e2)|今天，<loc>南海</loc>低压系统将进入<loc>台湾</loc>海峡南部
+到达(e1,e2)|我<plane>轰-6K</plane>等多型战机战巡<loc>南海</loc>
+到达(e1,e2)|空军<plane>苏-35</plane>战机高调亮剑<loc>南海</loc>
+到达(e1,e2)|<army>中国空军</army>战机战巡<loc>南海</loc>（资料照片）
+到达(e1,e2)|<army>中国空军</army>多型战机远洋训练战巡<loc>南海</loc>
+无关系(e1,e2)|<country>美国</country>介入<loc>南海</loc>越来越深
+到达(e1,e2)|<army>中国空军</army>战机战巡<loc>南海</loc>(资料照片)
+无关系(e1,e2)|外媒：<army>中国海军</army>非同寻常<loc>南海</loc>秀力量
+无关系(e1,e2)|<per>渔民</per>西沙作业受伤“<loc>南海</loc>神鹰”紧急救援
+到达(e1,e2)|英媒：<ship>辽宁舰</ship>率40艘军舰<loc>南海</loc>演习

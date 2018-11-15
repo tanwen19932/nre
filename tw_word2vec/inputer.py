@@ -56,44 +56,6 @@ class Inputer(object):
             np.save(config.position_matrix_file_path[0:-4], position_matrix)
         self.position_matrix = np.load(config.position_matrix_file_path)
         print("位置向量矩阵的大小", self.position_matrix.shape)
-
-        ##初始化 tokenizer 转化文本为sequence
-        default_model = {}
-        default_model = tw_w2v.get_word2vec_dic(config.word2vec_file_path)
-        self.tokenizer = Tokenizer(num_words=config.MAX_NB_WORDS)  #
-        words = None
-        if isinstance(default_model,dict):
-            words = default_model.keys()
-        else:
-            words =  default_model.vocab.keys()
-
-        self.tokenizer.fit_on_texts(words)
-        word_index = self.tokenizer.word_index
-        self.num_words = min(config.MAX_NB_WORDS, len(word_index)+1)
-        ##初始化词向量，词向量矩阵 ： 50000*64
-        model_dim =0
-        for key in words:
-            model_dim = default_model[key].shape[0]
-            break
-        if self.EMBEDDING_DIM != model_dim:
-            print("WARN ! 设置的词向量与读取维数不同，默认采用读取的词向量维数。", self.EMBEDDING_DIM, model_dim)
-            self.EMBEDDING_DIM =model_dim
-            config.EMBEDDING_DIM = model_dim
-        self.embedding_matrix = np.zeros((self.num_words, config.EMBEDDING_DIM))
-        for word, i in word_index.items():
-            if i >= config.MAX_NB_WORDS:
-                continue
-            embedding_vector = default_model[word]
-            if embedding_vector is not None:
-                # 文本数据中的词在词向量字典中没有，向量为取0；如果有则取词向量中该词的向量
-                try:
-                    self.embedding_matrix[i] = embedding_vector
-                except Exception as e:
-                    print(e)
-            else:
-                print("warn! ",word,"不在词向量列表")
-        print("词向量矩阵的大小",self.embedding_matrix.shape)
-
         ##初始化词性标注List
         self.POS_list = []
         if os.path.exists(config.POS_list_file_path):
@@ -111,16 +73,55 @@ class Inputer(object):
 
             all_pos_set = set(self.POS_list)
             wordPairList_allSen, entityPosition_allSen = self.word_segmentor.segListWithNerTag(file_sentences)
-            for pairs in wordPairList_allSen:
+            for i in range(len(wordPairList_allSen)):
+                pairs = wordPairList_allSen[i]
+                entity_posi = entityPosition_allSen[i]
+                pairs =[pairs[entity_posi[0]],pairs[entity_posi[1]]]
                 for pair in pairs:
-                    if not all_pos_set.__contains__(pair.flag):
-                        self.POS_list.append(pair.flag)
-                        all_pos_set.add(pair.flag)
+                    if not all_pos_set.__contains__(pair[1]):
+                        self.POS_list.append(pair[1])
+                        all_pos_set.add(pair[1])
             with open(config.POS_list_file_path, "w", encoding="UTF-8") as f:
                 for pos in self.POS_list:
                     f.write(pos)
                     f.write("\n")
         print("POS类型", len(self.POS_list))
+        ##初始化 tokenizer 转化文本为sequence
+        default_model = {}
+        default_model = tw_w2v.get_word2vec_dic(config.word2vec_file_path)
+        self.tokenizer = Tokenizer(num_words=config.MAX_NB_WORDS)  #
+        words = None
+        if isinstance(default_model, dict):
+            words = default_model.keys()
+        else:
+            words = default_model.vocab.keys()
+
+        self.tokenizer.fit_on_texts(words)
+        word_index = self.tokenizer.word_index
+        self.num_words = min(config.MAX_NB_WORDS, len(word_index) + 1)
+        ##初始化词向量，词向量矩阵 ： 50000*64
+        model_dim = 0
+        for key in words:
+            model_dim = default_model[key].shape[0]
+            break
+        if self.EMBEDDING_DIM != model_dim:
+            print("WARN ! 设置的词向量与读取维数不同，默认采用读取的词向量维数。", self.EMBEDDING_DIM, model_dim)
+            self.EMBEDDING_DIM = model_dim
+            config.EMBEDDING_DIM = model_dim
+        self.embedding_matrix = np.zeros((self.num_words, config.EMBEDDING_DIM))
+        for word, i in word_index.items():
+            if i >= config.MAX_NB_WORDS:
+                continue
+            embedding_vector = default_model[word]
+            if embedding_vector is not None:
+                # 文本数据中的词在词向量字典中没有，向量为取0；如果有则取词向量中该词的向量
+                try:
+                    self.embedding_matrix[i] = embedding_vector
+                except Exception as e:
+                    print(e)
+            else:
+                print("warn! ", word, "不在词向量列表")
+        print("词向量矩阵的大小", self.embedding_matrix.shape)
 
         ##关系种类，RelationWordAdmin有relations和relation_word_dic
         self.relationWordAdmin = RelationWordAdmin(config.types_file_path);

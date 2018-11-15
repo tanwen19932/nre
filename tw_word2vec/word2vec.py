@@ -63,7 +63,7 @@ def saveZh(filepath):
     # 使用一系列文档来生成token词典，texts为list类，每个元素为一个文档
 
     all_word_with_pos =[]
-    with open("../data/rawZhData/news_raw_wc2017-12-19.txt", "r") as f:
+    with open("../data/rawZhData/news_raw_wc2017-12-19.txt", "r", encoding="UTF-8") as f:
         for line in f.readlines():
             line = line.strip()
             all_word_with_pos.extend( jieba_seg.segOnly(line))

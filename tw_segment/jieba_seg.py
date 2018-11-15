@@ -78,6 +78,4 @@ if __name__ == '__main__':
     print(pairs[positions[1]])
     pairList = tokenizer.segOnly(line)
     print(pairList)
-
-
-            # print(list(map(lambda x:x.word,pairList)))
+    # print(list(map(lambda x:x.word,pairList)))

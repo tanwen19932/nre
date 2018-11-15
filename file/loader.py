@@ -11,7 +11,6 @@ def read_all_lines(path):
                 all_lines.append(line)
     return all_lines
 
-
 def load_raw(path1, path2):
     al_train = read_all_lines(path1)
     al_test = read_all_lines(path2)

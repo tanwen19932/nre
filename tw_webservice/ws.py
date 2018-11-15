@@ -7,7 +7,7 @@ from tw_word2vec.inputer import Configuration, Inputer
 from tw_word2vec.lstm_trainer_zh import LstmTrainer
 from tw_word2vec.outputer import Outputer
 from tw_word2vec.trainer import Trainer
-
+import json
 
 class ReWebService(object):
     def __init__(self,outputer:Outputer):
@@ -45,7 +45,6 @@ class ReWebService(object):
 
 
 if __name__ == '__main__':
-    api = falcon.API()
     config = Configuration(
         position_matrix_file_path="../data/posi_matrix.npy",
         word2vec_file_path="../data/needed_zh_word2vec.pkl",
@@ -63,7 +62,7 @@ if __name__ == '__main__':
 
     print(json.dumps(outputer.getDescription(predict_texts), ensure_ascii=False))
     re_service = ReWebService(outputer)
-
+    api = falcon.API()
     api.add_route('/re', re_service)
     httpd = simple_server.make_server('192.168.0.8', 65502, api)
     httpd.serve_forever()

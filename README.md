@@ -142,7 +142,7 @@ localhost:tw_word2vec tw$ python sem_eval_08.py
 直接调用tw_webservice/ws.py 启动  
 端口默认为8005 调用地址为localhost:8005/re  
 参数
-```
+``` json
 {
 	"sentences":[
 		"<per>你</per>准备坐<instrument>船</instrument>去那边",
@@ -152,7 +152,7 @@ localhost:tw_word2vec tw$ python sem_eval_08.py
 ```
 
 返回结果
-```
+``` json
 {
     "result": [
         {
