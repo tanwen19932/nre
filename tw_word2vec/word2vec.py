@@ -3,14 +3,17 @@ import os
 import pandas as pd
 import numpy as np
 from keras.preprocessing import text, sequence
-from tw_segment import  jieba_seg
+from tw_segment import jieba_seg
+
+
 def get_word2vec_dic(filepath):
     return Word2VecHelpper(filepath=filepath).word2vec_model
 
 
 class Word2VecHelpper(object):
     word2vec_model = {}
-    def __init__(self,filepath:str,isJson =True):
+
+    def __init__(self, filepath: str, isJson=True):
         import pickle
         f = open(filepath, 'rb')
         if isJson and filepath.endswith(".pkl"):
@@ -26,6 +29,7 @@ class Word2VecHelpper(object):
 
     def get(self):
         return self.word2vec_model
+
 
 def saveEn(filepath):
     # 对文本中的词进行统计计数，生成文档词典，以支持基于词典位序生成文本的向量表示，超过max_features的单词被丢掉
@@ -58,20 +62,22 @@ def saveEn(filepath):
     f.write(pickle.dumps(need_word2vec))
     f.close()
 
+
 def saveZh(filepath):
     # 对文本中的词进行统计计数，生成文档词典，以支持基于词典位序生成文本的向量表示，超过max_features的单词被丢掉
     # 使用一系列文档来生成token词典，texts为list类，每个元素为一个文档
 
-    all_word_with_pos =[]
+    all_word_with_pos = []
     with open("../data/rawZhData/news_raw_wc2017-12-19.txt", "r", encoding="UTF-8") as f:
         for line in f.readlines():
             line = line.strip()
-            all_word_with_pos.extend( jieba_seg.segOnly(line))
+            all_word_with_pos.extend(jieba_seg.segOnly(line))
     need_word2vec = {}
     tokenizer = text.Tokenizer(num_words=50000)
-    tokenizer.fit_on_texts(list(map(lambda x:x.word,all_word_with_pos)))
+    tokenizer.fit_on_texts(list(map(lambda x: x.word, all_word_with_pos)))
     word_vec = gensim.models.KeyedVectors.load_word2vec_format(
-        os.path.join(os.path.dirname(__file__), '../data/word2vec/news_12g_baidubaike_20g_novel_90g_embedding_64.bin'), binary=True)
+        os.path.join(os.path.dirname(__file__), '../data/word2vec/news_12g_baidubaike_20g_novel_90g_embedding_64.bin'),
+        binary=True)
     for word in tokenizer.word_index:
         if (word_vec.__contains__(word)):
             need_word2vec[word] = word_vec[word]
@@ -84,15 +90,13 @@ def saveZh(filepath):
     f.close()
 
 
-
 def getAllWord2Vec(filepath):
     # 对文本中的词进行统计计数，生成文档词典，以支持基于词典位序生成文本的向量表示，超过max_features的单词被丢掉
     # 使用一系列文档来生成token词典，texts为list类，每个元素为一个文档
     word_vec = gensim.models.KeyedVectors.load_word2vec_format(
-        os.path.join(os.path.dirname(__file__), '../data/word2vec/news_12g_baidubaike_20g_novel_90g_embedding_64.bin'), binary=True)
+        os.path.join(os.path.dirname(__file__), '../data/word2vec/news_12g_baidubaike_20g_novel_90g_embedding_64.bin'),
+        binary=True)
     return word_vec
-
-
 
 
 if __name__ == '__main__':
