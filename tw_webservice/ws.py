@@ -47,11 +47,11 @@ class ReWebService(object):
 if __name__ == '__main__':
     config = Configuration(
         position_matrix_file_path="../data/posi_matrix.npy",
-        word2vec_file_path="../data/needed_zh_word2vec.pkl",
-        POS_list_file_path="../data/relation_military/pos_list.txt",
-        types_file_path="../data/relation_military/relations_zh.txt",
-        corpus_file_path="../data/relation_military/train_zh.txt",
-        model_file_path="../data/model/re_military_zh_model.lstm.hdf5",
+        word2vec_file_path="../data/news_12g_baidubaike_20g_novel_90g_embedding_64.bin",
+        POS_list_file_path="../data/relation_hj/pos_list.txt",
+        types_file_path="../data/relation_hj/relations_zh.txt",
+        corpus_file_path="../data/relation_hj/train_zh.txt",
+        model_file_path="../data/model/re_hj_zh_model.lstm.hdf5",
     )
     inputer = Inputer(config)
     trainer = Trainer(inputer, LstmTrainer())
@@ -64,5 +64,5 @@ if __name__ == '__main__':
     re_service = ReWebService(outputer)
     api = falcon.API()
     api.add_route('/re', re_service)
-    httpd = simple_server.make_server('192.168.0.8', 65502, api)
+    httpd = simple_server.make_server('127.0.0.1', 65502, api)
     httpd.serve_forever()

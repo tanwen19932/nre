@@ -6,10 +6,10 @@
 # @Desc  :
 
 import keras
-from keras import optimizers
+from keras import optimizers, regularizers
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import Dense, Input
-from keras.layers import regularizers, LSTM
+from keras.layers import LSTM
 from keras.models import Model
 
 from tw_word2vec.inputer import SentencesVector
@@ -47,7 +47,7 @@ class LstmTrainer():
         early = EarlyStopping(monitor="categorical_accuracy", mode="min", patience=50)
         metrics = Metrics(sentences_vector)
         # 开始训练
-        callbacks_list = [checkpoint, early,metrics]  # early
+        callbacks_list = [checkpoint, early, metrics]  # early
         # And trained it via:
         model.fit({'sequence_input': sentences_vector.sentence_vec, 'posi_input': sentences_vector.position_vec,
                    'pos_input': sentences_vector.pos_vec},

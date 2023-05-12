@@ -3,6 +3,8 @@ Neural Relation Extraction (NRE) with wechat API
 中文采用自主的一些数据集，
 英文采用 SemEval2010_task8 数据
 采用keras TensorFlow Backend
+python 3.7
+已更新所需包
 
 ## todoList
 模型过于简单，采用更通用的网络模型
@@ -10,7 +12,7 @@ Neural Relation Extraction (NRE) with wechat API
 需要训练测试集准确率判断不够详细
 中文词向量  
 news_12g_baidubaike_20g_novel_90g_embedding_64.bin  
-链接:https://pan.baidu.com/s/12kh-sWvuyqMf0N8yIq18Vw  密码:vz78
+链接: https://pan.baidu.com/s/1LZcx5UVTWtNJb0GczSg6rg?pwd=8kqt 提取码: 8kqt 
 
 英文词向量  
 GoogleNews-vectors-negative300.bin  
