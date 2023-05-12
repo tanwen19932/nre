@@ -6,10 +6,10 @@
 # @Desc  :
 
 import keras
-from keras import optimizers
+from keras import optimizers,regularizers
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import Dense, Input, Flatten
-from keras.layers import MaxPooling1D, Dropout, regularizers, Conv1D
+from keras.layers import MaxPooling1D, Dropout, Conv1D
 from keras.models import Model
 
 from tw_segment.en_seg import EnSegmentor
