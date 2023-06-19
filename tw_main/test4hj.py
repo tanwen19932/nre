@@ -13,7 +13,7 @@ from tw_word2vec.trainer import Trainer
 if __name__ == '__main__':
     config = Configuration(
         position_matrix_file_path="../data/posi_matrix.npy",
-        word2vec_file_path="../data/news_12g_baidubaike_20g_novel_90g_embedding_64.bin",
+        word2vec_file_path="../data 1/news_12g_baidubaike_20g_novel_90g_embedding_64.bin",
         POS_list_file_path="../data/relation_hj/pos_list.txt",
         types_file_path="../data/relation_hj/relations_zh.txt",
         corpus_file_path="../data/relation_hj/train_zh.txt",

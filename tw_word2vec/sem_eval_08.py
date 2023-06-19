@@ -6,12 +6,12 @@
 # @Desc  :
 
 import keras
-from keras import optimizers,regularizers
+from keras import optimizers, regularizers
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import Dense, Input, Flatten
 from keras.layers import MaxPooling1D, Dropout, Conv1D
 from keras.models import Model
-
+from keras.callbacks import TensorBoard
 from tw_segment.en_seg import EnSegmentor
 from tw_word2vec.inputer import SentencesVector, Configuration, Inputer
 from tw_word2vec.outputer import Outputer
@@ -52,16 +52,20 @@ class CnnTrainerEn():
 
         checkpoint = ModelCheckpoint(config.model_file_path, monitor='val_loss', verbose=1, save_best_only=True,
                                      mode='min')
+        tbCallBack = TensorBoard(log_dir='./logs',
+                                 histogram_freq=0,
+                                 write_graph=True,
+                                 write_images=True)
         # 当监测值不再改善时，该回调函数将中止训练
         early = EarlyStopping(monitor="val_loss", mode="min", patience=200)
 
         # 开始训练
-        callbacks_list = [checkpoint, early]  # early
+        callbacks_list = [tbCallBack, tbCallBack, early]  # early
         # And trained it via:
         model.fit({'sequence_input': sentences_vector.sentence_vec, 'posi_input': sentences_vector.position_vec,
                    'pos_input': sentences_vector.pos_vec},
                   sentences_vector.classifications_vec,
-                  batch_size= 50,
+                  batch_size=50,
                   epochs=50000,
                   validation_split=0.2,
                   # validation_data=({'sequence_input': x_test, 'posi_input': x_test_posi}, y_test),

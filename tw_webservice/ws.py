@@ -3,14 +3,16 @@ from wsgiref import simple_server
 
 import falcon
 
+from tw_segment.en_seg import EnSegmentor
 from tw_word2vec.inputer import Configuration, Inputer
 from tw_word2vec.lstm_trainer_zh import LstmTrainer
 from tw_word2vec.outputer import Outputer
 from tw_word2vec.trainer import Trainer
 import json
 
+
 class ReWebService(object):
-    def __init__(self,outputer:Outputer):
+    def __init__(self, outputer: Outputer):
         self.outputer = outputer
 
     def on_get(self, req, resp):
@@ -21,12 +23,9 @@ class ReWebService(object):
 
     def get_request_sentences(self, req):
         sentences = None
-
-        if (req.params.__contains__('sentences')):
-            sentences = req.params['sentences']
-
-        elif (req.media.__contains__('sentences')):
-            sentences = req.media['sentences']
+        req_body = req.bounded_stream.read()
+        json_data = json.loads(req_body.decode('utf8'))
+        sentences = json_data['sentences']
         return sentences
 
     def _handle(self, req, resp):
@@ -46,12 +45,14 @@ class ReWebService(object):
 
 if __name__ == '__main__':
     config = Configuration(
+        word_segmentor=EnSegmentor(),
+        EMBEDDING_DIM=300,
         position_matrix_file_path="../data/posi_matrix.npy",
-        word2vec_file_path="../data/news_12g_baidubaike_20g_novel_90g_embedding_64.bin",
-        POS_list_file_path="../data/relation_hj/pos_list.txt",
-        types_file_path="../data/relation_hj/relations_zh.txt",
-        corpus_file_path="../data/relation_hj/train_zh.txt",
-        model_file_path="../data/model/re_hj_zh_model.lstm.hdf5",
+        word2vec_file_path="../data/needed_word2vec.pkl",
+        POS_list_file_path="../data/pos_list.txt",
+        types_file_path="../data/relations_en.txt",
+        corpus_file_path="../data/train_en.txt",
+        model_file_path="../data/model/re_sem_eval_en_model.cnn.hdf5",
     )
     inputer = Inputer(config)
     trainer = Trainer(inputer, LstmTrainer())
@@ -64,5 +65,5 @@ if __name__ == '__main__':
     re_service = ReWebService(outputer)
     api = falcon.API()
     api.add_route('/re', re_service)
-    httpd = simple_server.make_server('127.0.0.1', 65502, api)
+    httpd = simple_server.make_server('0.0.0.0', 65502, api)
     httpd.serve_forever()
