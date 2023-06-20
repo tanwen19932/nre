@@ -4,7 +4,7 @@ Neural Relation Extraction (NRE) with wechat API
 英文采用 SemEval2010_task8 数据
 采用keras TensorFlow Backend
 python 3.7
-已更新所需包
+已更新所需包 增加start.py 具体可看文件，增加统一入口参数 变量解析
 
 ## todoList
 模型过于简单，采用更通用的网络模型

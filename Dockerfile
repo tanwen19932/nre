@@ -42,7 +42,7 @@ RUN echo  'export LANG="C.UTF-8"' >> ~/.bashrc
 RUN echo  'conda activate py37' >> ~/.bashrc
 ENV PYTHONPATH="${PYTHONPATH}:/workspace"
 
-WORKDIR /workspace/tw_word2vec
+WORKDIR /workspace
 # 如果能保证镜像可以用 这里CMD输入相关启动命令即可，或是docker执行的时候手动指明即可，建议docker执行手动指明，因为有训练服务等不同功能
 ENTRYPOINT ["/bin/bash"]
-CMD ["-c","python sem_eval_08.py"]
+CMD ["-c","python start.py"]
