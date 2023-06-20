@@ -29,15 +29,18 @@ ENV PATH /opt/conda/envs/${CONDA_ENV}/bin:$PATH
 ENV CONDA_DEFAULT_ENV ${CONDA_ENV}
 WORKDIR /workspace
 COPY . /workspace
-RUN pip install --upgrade pip -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
-RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
-RUN pip install -r requirements.txt
+RUN pip install --upgrade pip -i http://pypi.douban.com/simple --trusted-host pypi.douban.com && \
+    pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
+    pip install -r requirements.txt && \
+    rm -rf ~/.cache
+
 ENV LANG="C.UTF-8"
 USER root
 # conda环境默认激活，root权限可以执行命令 ，增加pythonpath执行方便各个workingdir都能够找到对应的module
 RUN echo 'export PYTHONPATH="${PYTHONPATH}:/workspace"' >> ~/.bashrc
 RUN echo  'export LANG="C.UTF-8"' >> ~/.bashrc
-RUN echo  'conda activate py36' >> ~/.bashrc
+RUN echo  'conda activate py37' >> ~/.bashrc
+ENV PYTHONPATH="${PYTHONPATH}:/workspace"
 
 WORKDIR /workspace/tw_word2vec
 # 如果能保证镜像可以用 这里CMD输入相关启动命令即可，或是docker执行的时候手动指明即可，建议docker执行手动指明，因为有训练服务等不同功能

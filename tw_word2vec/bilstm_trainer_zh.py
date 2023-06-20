@@ -7,7 +7,7 @@
 
 import keras
 from keras import optimizers, regularizers
-from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from keras.layers import Dense, Input, Bidirectional
 from keras.layers import Embedding
 from keras.layers import LSTM
@@ -58,6 +58,12 @@ class BiLstmTrainer():
         metrics = Metrics(sentences_vector)
         # 开始训练
         callbacks_list = [checkpoint, early]  # early
+        if config.log_file_path is not None:
+            tb_call_back = TensorBoard(log_dir=config.log_file_path,
+                                       histogram_freq=0,
+                                       write_graph=True,
+                                       write_images=True)
+            callbacks_list.append(tb_call_back)
         # And trained it via:
         model.fit({'sequence_input': sentences_vector.sentence_vec, 'posi_input': sentences_vector.position_vec,
                    'pos_input': sentences_vector.pos_vec},

@@ -29,6 +29,8 @@ class Configuration(object):
                  types_file_path="../data/relations_zh.txt",
                  corpus_file_path="../data/train_zh.txt",
                  model_file_path="../data/model/re_zh_model.lstm.hdf5",
+                 log_file_path="../data/model/logs",
+                 epoch=100,
                  ) -> None:
         self.word_segmentor = word_segmentor
         self.MAX_NB_WORDS = MAX_NB_WORDS
@@ -40,6 +42,7 @@ class Configuration(object):
         self.types_file_path = types_file_path
         self.corpus_file_path = corpus_file_path
         self.model_file_path = model_file_path
+        self.log_file_path = log_file_path
 
 
 class Inputer(object):

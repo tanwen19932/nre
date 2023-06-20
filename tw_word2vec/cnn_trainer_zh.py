@@ -6,10 +6,10 @@
 # @Desc  :
 
 import keras
-from keras import optimizers
-from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras import optimizers, regularizers
+from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from keras.layers import Dense, Input, Flatten
-from keras.layers import MaxPooling1D, Dropout, regularizers, Conv1D
+from keras.layers import MaxPooling1D, Dropout, Conv1D
 from keras.models import Model
 
 from tw_word2vec.inputer import SentencesVector
@@ -23,8 +23,9 @@ class CnnTrainer():
                                name="sequence_input")  # 100*1最多100个词组成输入
         embedded_sequences = inputer.getWordEmbedding()(sequence_input)  # 句子转为向量矩阵 训练集大小*100*64维
         # model test2
-        posi_input = Input(shape=(config.MAX_SEQUENCE_LENGTH, sentences_vector.position_vec.shape[2]), name="posi_input")
-        pos_input = Input(shape=(config.MAX_SEQUENCE_LENGTH,sentences_vector.pos_vec.shape[2]), name="pos_input")
+        posi_input = Input(shape=(config.MAX_SEQUENCE_LENGTH, sentences_vector.position_vec.shape[2]),
+                           name="posi_input")
+        pos_input = Input(shape=(config.MAX_SEQUENCE_LENGTH, sentences_vector.pos_vec.shape[2]), name="pos_input")
         embedded_sequences = keras.layers.concatenate([embedded_sequences, posi_input, pos_input])
         # conv1d_1s = MultiConv1D(filters=[90, 80, 70, 50, 30, 10], kernel_size=[3, 4, 5], activation='relu')
         # conv1d_1s = MultiConv1D(filters=[10], kernel_size=[3], activation='relu')
@@ -56,6 +57,12 @@ class CnnTrainer():
 
         # 开始训练
         callbacks_list = [checkpoint, early]  # early
+        if config.log_file_path is not None:
+            tb_call_back = TensorBoard(log_dir=config.log_file_path,
+                                     histogram_freq=0,
+                                     write_graph=True,
+                                     write_images=True)
+            callbacks_list.append(tb_call_back)
         # And trained it via:
         model.fit({'sequence_input': sentences_vector.sentence_vec, 'posi_input': sentences_vector.position_vec,
                    'pos_input': sentences_vector.pos_vec},

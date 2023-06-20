@@ -52,15 +52,19 @@ class CnnTrainerEn():
 
         checkpoint = ModelCheckpoint(config.model_file_path, monitor='val_loss', verbose=1, save_best_only=True,
                                      mode='min')
-        tbCallBack = TensorBoard(log_dir='./logs',
-                                 histogram_freq=0,
-                                 write_graph=True,
-                                 write_images=True)
+
         # 当监测值不再改善时，该回调函数将中止训练
         early = EarlyStopping(monitor="val_loss", mode="min", patience=200)
 
         # 开始训练
-        callbacks_list = [tbCallBack, tbCallBack, early]  # early
+        callbacks_list = [checkpoint, early]  # early
+        if config.log_file_path != None:
+            tbCallBack = TensorBoard(log_dir=config.log_file_path,
+                                     histogram_freq=0,
+                                     write_graph=True,
+                                     write_images=True)
+            callbacks_list.append(tbCallBack)
+
         # And trained it via:
         model.fit({'sequence_input': sentences_vector.sentence_vec, 'posi_input': sentences_vector.position_vec,
                    'pos_input': sentences_vector.pos_vec},
