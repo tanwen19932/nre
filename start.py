@@ -67,8 +67,8 @@ if __name__ == '__main__':
     parser.add_argument('-model', type=str, help="模型存储位置信息",
                         default="./data/model/re_sem_eval_en_model.lstm.hdf5")
     parser.add_argument('-log', type=str, help="模型训练日志存储位置信息",
-                        default="./data/model/re_sem_eval_en_model.lstm.hdf5/logs")
-    parser.add_argument('-network', choices=['CNN', 'LSTM', 'BiLSTM'], help="模型选项 zh和en", default="en")
+                        default="./data/model/logs")
+    parser.add_argument('-network', choices=['CNN', 'LSTM', 'BiLSTM'], help="模型选项 CNN LSTM BiLSTM", default="LSTM")
     parser.add_argument('-epoch', type=int, help="执行epoch次数", default=100)
     parser.add_argument('-service', type=bool, choices=[True, False], help="是否发布服务", default=False)
     # 3. 从命令行中结构化解析参数
@@ -81,18 +81,26 @@ if __name__ == '__main__':
         word_segmentor = JieBaTokenizer()
         embedding_dim = 64
         word2vec_file_path = "./data/needed_zh_word2vec.pkl"
+    import os
+    try:
+        dirname = os.path.dirname(args.model)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+    except Exception as e:
+        print(e)
+
     config = Configuration(
-        word_segmentor=word_segmentor,
-        EMBEDDING_DIM=embedding_dim,
-        position_matrix_file_path=args.pos,
-        word2vec_file_path=word2vec_file_path,
-        POS_list_file_path=args.POS,
-        types_file_path=args.type,
-        corpus_file_path=args.train,
-        model_file_path=args.model,
-        log_file_path=args.log,
-        epoch=args.epoch,
-    )
+            word_segmentor=word_segmentor,
+            EMBEDDING_DIM=embedding_dim,
+            position_matrix_file_path=args.pos,
+            word2vec_file_path=word2vec_file_path,
+            POS_list_file_path=args.POS,
+            types_file_path=args.type,
+            corpus_file_path=args.train,
+            model_file_path=args.model,
+            log_file_path=args.log,
+            epoch=args.epoch,
+        )
     inputer = Inputer(config)
     network = LstmTrainer()
     if args.network == 'CNN':
