@@ -7,8 +7,8 @@ from keras.preprocessing.text import Tokenizer
 from gensim.models import word2vec
 
 if __name__ == '__main__':
-    corpus_dir = "../data 1/raw_corpus/doupocangqiong_tiancantudou.txt"
-    corpus_cut_dir = "../data 1/raw_corpus/doupocangqiong_tiancantudou_cut.txt"
+    corpus_dir = "../data1/raw_corpus/doupocangqiong_tiancantudou.txt"
+    corpus_cut_dir = "../data1/raw_corpus/doupocangqiong_tiancantudou_cut.txt"
     w2v_save_dir = "../data/doupocangqiu_word2vec.txt"
 
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)

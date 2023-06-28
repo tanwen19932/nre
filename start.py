@@ -82,6 +82,7 @@ if __name__ == '__main__':
         embedding_dim = 64
         word2vec_file_path = "./data/needed_zh_word2vec.pkl"
     import os
+
     try:
         dirname = os.path.dirname(args.model)
         if not os.path.exists(dirname):
@@ -90,17 +91,17 @@ if __name__ == '__main__':
         print(e)
 
     config = Configuration(
-            word_segmentor=word_segmentor,
-            EMBEDDING_DIM=embedding_dim,
-            position_matrix_file_path=args.pos,
-            word2vec_file_path=word2vec_file_path,
-            POS_list_file_path=args.POS,
-            types_file_path=args.type,
-            corpus_file_path=args.train,
-            model_file_path=args.model,
-            log_file_path=args.log,
-            epoch=args.epoch,
-        )
+        word_segmentor=word_segmentor,
+        EMBEDDING_DIM=embedding_dim,
+        position_matrix_file_path=args.pos,
+        word2vec_file_path=word2vec_file_path,
+        POS_list_file_path=args.POS,
+        types_file_path=args.type,
+        corpus_file_path=args.train,
+        model_file_path=args.model,
+        log_file_path=args.log,
+        epoch=args.epoch,
+    )
     inputer = Inputer(config)
     network = LstmTrainer()
     if args.network == 'CNN':

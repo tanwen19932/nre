@@ -41,7 +41,7 @@ RUN echo 'export PYTHONPATH="${PYTHONPATH}:/workspace"' >> ~/.bashrc
 RUN echo  'export LANG="C.UTF-8"' >> ~/.bashrc
 RUN echo  'conda activate py37' >> ~/.bashrc
 ENV PYTHONPATH="${PYTHONPATH}:/workspace"
-
+EXPOSE 65502
 WORKDIR /workspace
 # 如果能保证镜像可以用 这里CMD输入相关启动命令即可，或是docker执行的时候手动指明即可，建议docker执行手动指明，因为有训练服务等不同功能
 ENTRYPOINT ["/bin/bash"]

@@ -60,13 +60,28 @@ class RelationWordAdmin(object):
             for pair in paris_all[i][pos[0] + 1:pos[1]]:
                 # print(pair)
                 # print(self.relation_word_dic)
-                if pair[0] in self.relation_word_dic[predict_type]:
-                    detail.append(pair[0])
-                    is_add = True
-                    break
+                try:
+                    if pair[0] in self.relation_word_dic[predict_type]:
+                        detail.append(pair[0])
+                        is_add = True
+                        break
+                except:
+                    pass
             if not is_add:
                 detail.append("")
         return detail
+    def reloadFromCorpus(self, corpus_path):
+        if self.relations == None:
+            self.relations = []
+        with open(corpus_path, "r", encoding="UTF-8") as f:
+            for line in f.readlines():
+                line = line.strip()
+                classification = line.split("|")[0].strip()
+                sentence = line.split("|")[1].strip()
+                self.relations.append(classification)
+        self.relations.append("无")
+        self.relations = list(set(self.relations))
+
 
 
 relation_admin_zh = RelationWordAdmin(ZH_RELATION_PATH)

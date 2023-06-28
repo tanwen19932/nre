@@ -43,6 +43,7 @@ class Configuration(object):
         self.corpus_file_path = corpus_file_path
         self.model_file_path = model_file_path
         self.log_file_path = log_file_path
+        self.epoch = epoch
 
 
 class Inputer(object):
@@ -57,7 +58,9 @@ class Inputer(object):
         if not os.path.isfile(config.position_matrix_file_path):
             position_matrix = np.random.randn(config.MAX_SEQUENCE_LENGTH, 20)
             np.save(config.position_matrix_file_path[0:-4], position_matrix)
-        self.position_matrix = np.load(config.position_matrix_file_path)
+            self.position_matrix = position_matrix
+        else:
+            self.position_matrix = np.load(config.position_matrix_file_path)
         print("位置向量矩阵的大小", self.position_matrix.shape)
         ##初始化词性标注List
         self.POS_list = []
@@ -79,7 +82,7 @@ class Inputer(object):
             for i in range(len(wordPairList_allSen)):
                 pairs = wordPairList_allSen[i]
                 entity_posi = entityPosition_allSen[i]
-                pairs =[pairs[entity_posi[0]],pairs[entity_posi[1]]]
+                pairs = [pairs[entity_posi[0]], pairs[entity_posi[1]]]
                 for pair in pairs:
                     if not all_pos_set.__contains__(pair[1]):
                         self.POS_list.append(pair[1])
@@ -129,8 +132,11 @@ class Inputer(object):
         ##关系种类，RelationWordAdmin有relations和relation_word_dic
         self.relationWordAdmin = RelationWordAdmin(config.types_file_path);
         self.types = self.relationWordAdmin.relations
+        if len(self.types) == 0:
+            print("分类类型为0 重新从训练集加载")
+            self.relationWordAdmin.reloadFromCorpus(config.corpus_file_path)
+            self.types = self.relationWordAdmin.relations
         print("分类类型", len(self.types))
-
 
     def getWordEmbedding(self):
         embedding_layer = Embedding(self.num_words,  # 词个数
@@ -143,7 +149,7 @@ class Inputer(object):
     def getSentenceVectorFromFile(self, file):
         relaTypes = []
         sentences = []
-        with open(file, 'r',encoding="UTF-8") as f:
+        with open(file, 'r', encoding="UTF-8") as f:
             for line in f.readlines():
                 the_type = line.split("|")[0].strip()
                 sentence = line.split("|")[1].strip()
@@ -151,9 +157,9 @@ class Inputer(object):
                     relaTypes.append(the_type)
                     sentences.append(sentence)
                 else:
-                    print("类型不在列表内：",the_type , sentences)
+                    print("类型不在列表内：", the_type, sentences)
         # 提取出句子及关系分类，传入SentencesVector中
-        return SentencesVector(self, sentences, classifications =relaTypes)
+        return SentencesVector(self, sentences, classifications=relaTypes)
 
 
 class SentencesVector(object):
@@ -161,7 +167,7 @@ class SentencesVector(object):
     position_vec = None
     pos_vec = None
     classifications_vec = None
-    inputer=None
+    inputer = None
 
     def __init__(self, inputer: Inputer, sentences=None, wordPairList_allSen=None, entityPosition_allSen=None,
                  classifications=None) -> None:
@@ -183,6 +189,10 @@ class SentencesVector(object):
                 try:
                     # pairList_wordPos是一个句子中的词与词性构成的元组, position_entityPair是一个句子中的两个实体的位置的元组
                     pairList_wordPos, position_entityPair = inputer.word_segmentor.segWithNerTag(sentence)
+                    if position_entityPair[1] > 100:
+                        continue
+                    if len(pairList_wordPos) > 100:
+                        pairList_wordPos = pairList_wordPos[0:100]
                     wordPairList_allSen.append(pairList_wordPos)
                     entityPosition_allSen.append(position_entityPair)
                     if not classifications_all is None:
@@ -202,11 +212,12 @@ class SentencesVector(object):
 
         # 获取位置向量
         # 三维矩阵，每个句子对应一个二维矩阵，该二维矩阵是设计规则生成出来的，跟句子中的每个词都有关系
-        self.position_vec = np.zeros((len(entityPosition_allSen), config.MAX_SEQUENCE_LENGTH, inputer.position_matrix.shape[1]*2))
+        self.position_vec = np.zeros(
+            (len(entityPosition_allSen), config.MAX_SEQUENCE_LENGTH, inputer.position_matrix.shape[1] * 2))
         for i in range(len(entityPosition_allSen)):
             e1_position = entityPosition_allSen[i][0]
             e2_position = entityPosition_allSen[i][1]
-            sentence_posi_maxtrix = np.zeros((config.MAX_SEQUENCE_LENGTH, inputer.position_matrix.shape[1]*2))
+            sentence_posi_maxtrix = np.zeros((config.MAX_SEQUENCE_LENGTH, inputer.position_matrix.shape[1] * 2))
             tokens = list(map(lambda x: x[0], wordPairList_allSen[i]))
             for j in range(len(tokens)):
                 e1_pv = inputer.position_matrix[j - e1_position]
@@ -260,9 +271,13 @@ class SentencesVector(object):
             # for i in range(len(row)):
             #     print(self.inputer.types[i], row[i])
 
-            predict_type = self.inputer.types[max_index]
-            if row[max_index]<0.4:
-                print("最大概率为",row[max_index])
-                predict_type = "无"
-            output.append(predict_type)
+            try:
+                predict_type = self.inputer.types[max_index]
+                if row[max_index] < 0.4:
+                    print("最大概率为", row[max_index])
+                    predict_type = "无"
+                output.append(predict_type)
+            except:
+                output.append(max_index)
+
         return output
